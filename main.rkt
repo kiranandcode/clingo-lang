@@ -1,7 +1,7 @@
 #lang racket
 (require "unsafe.rkt" racket/struct)
 
-(define ctrl (clingo-control-new '[] #f #f 20))
+
 
 (define (configure-to-enumerate-all-models ctrl)
   (define conf (clingo-control-configuration ctrl))
@@ -10,12 +10,6 @@
     (clingo-configuration-map-at conf root "solve.models"))
   (clingo-configuration-value-set conf sub-keys "0"))
 
-(configure-to-enumerate-all-models ctrl)
-
-(clingo-control-add ctrl "base" '[] "a :- not  b. b :- not a. - a :- b.")
-(clingo-control-ground ctrl `[,(make-clingo-part "base" #f 0)] #f #f)
-
-(define solve-handle (clingo-control-solve ctrl 'clingo-solve-mode-yield '[] #f #f))
 
 (define-struct infinum () 
   #:methods gen:custom-write
@@ -68,6 +62,14 @@
   (displayln
    (for/list ([symbol symbols])
      (symbol->term symbol))))
+
+(define ctrl (clingo-control-new '[] #f #f 20))
+(configure-to-enumerate-all-models ctrl)
+
+(clingo-control-add ctrl "base" '[] "a :- not  b. b :- not a. - a :- b.")
+(clingo-control-ground ctrl `[,(make-clingo-part "base" #f 0)] #f #f)
+
+(define solve-handle (clingo-control-solve ctrl 'clingo-solve-mode-yield '[] #f #f))
 
 (define (loop)
   (clingo-solve-handle-resume solve-handle)
