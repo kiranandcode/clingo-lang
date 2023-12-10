@@ -40,7 +40,8 @@
              (cons/c symbol? (listof term?)))) ;; (- a) or (- (f x y))
     (cons/c symbol? (listof term?))))) ;; (f x y)
 
-(define (symbol->term sym)
+(define/contract (symbol->term sym)
+  (-> any/c term?)
   (define symbol-type (clingo-symbol-type sym))
   (match symbol-type
     ['clingo-symbol-type-infimum inf]
