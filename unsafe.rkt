@@ -591,18 +591,28 @@
 ;; @param[out] positive the result
 ;; @return whether the call was successful; might set one of the following error codes:
 ;; - ::clingo_error_runtime if symbol is not of type ::clingo_symbol_type_function
-(define-clingo clingo-symbol-is-positive
-  (_fun _clingo-symbol (positive : (_ptr o _bool)) -> (res : _bool) ->
-        (if res positive (raise-clingo-error))))
+(define-clingo clingo-symbol-is-positive-unsafe
+  (_fun _clingo-symbol (positive : (_box _bool)) -> (res : _bool) ->
+        (if res positive (raise-clingo-error)))
+  #:c-id clingo_symbol_is_positive)
+(define is-positive-result-box (box #false))
+(define (clingo-symbol-is-positive symbol)
+  (clingo-symbol-is-positive-unsafe symbol is-positive-result-box)
+  (unbox is-positive-result-box))
 ;; Check if a function is negative (has a sign).
 ;;
 ;; @param[in] symbol the target symbol
 ;; @param[out] negative the result
 ;; @return whether the call was successful; might set one of the following error codes:
 ;; - ::clingo_error_runtime if symbol is not of type ::clingo_symbol_type_function
-(define-clingo clingo-symbol-is-negative
-  (_fun _clingo-symbol (negative : (_ptr o _bool)) -> (res : _bool) ->
-        (if res negative (raise-clingo-error))))
+(define is-negative-result-box (box #false))
+(define-clingo clingo-symbol-is-negative-unsafe
+  (_fun _clingo-symbol (negative : (_box _bool)) -> (res : _bool) ->
+        (if res negative (raise-clingo-error)))
+  #:c-id clingo_symbol_is_negative)
+(define (clingo-symbol-is-negative symbol)
+  (clingo-symbol-is-negative-unsafe symbol is-negative-result-box)
+  (unbox is-negative-result-box))
 ;; Get the arguments of a symbol.
 ;;
 ;; @param[in] symbol the target symbol

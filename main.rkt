@@ -1,67 +1,27 @@
 #lang racket
-(require "unsafe.rkt" racket/struct)
-
-
+(require "unsafe.rkt" "term.rkt" "config.rkt")
 
 (define (configure-to-enumerate-all-models ctrl)
-  (define conf (clingo-control-configuration ctrl))
-  (define root (clingo-configuration-root conf))
-  (define sub-keys
-    (clingo-configuration-map-at conf root "solve.models"))
-  (clingo-configuration-value-set conf sub-keys "0"))
-
-
-(define-struct infinum () 
-  #:methods gen:custom-write
-  [(define write-proc (lambda (_ port mode) (write-string "#inf" port)))])
-(define inf (make-infinum) )
-(define-struct supremum () 
-  #:methods gen:custom-write
-  [(define write-proc (lambda (_ port mode) (write-string "#sup" port)))])
-(define sup (make-supremum))
-
-(define term?
-  (flat-rec-contract term?
-   (or/c
-    infinum?              ;; #inf
-    supremum?             ;; #sup
-    number?               ;; 1
-    string?               ;; "hello"
-    symbol?               ;; a
-    (list/c '-
-            (or/c
-             symbol?
-             (cons/c symbol? (listof term?)))) ;; (- a) or (- (f x y))
-    (cons/c symbol? (listof term?))))) ;; (f x y)
-
-(define/contract (symbol->term sym)
-  (-> any/c term?)
-  (define symbol-type (clingo-symbol-type sym))
-  (match symbol-type
-    ['clingo-symbol-type-infimum inf]
-    ['clingo-symbol-type-supremum sup]
-    ['clingo-symbol-type-number (clingo-symbol-number sym)]
-    ['clingo-symbol-type-string (clingo-symbol-string sym)]
-    ['clingo-symbol-type-function
-     (define is-positive (clingo-symbol-is-positive sym))
-     (define is-negative (clingo-symbol-is-negative sym))
-     (define f (string->symbol (clingo-symbol-name sym)))
-     (define args (map symbol->term (clingo-symbol-arguments sym)))
-     (define expr (if (null? args) f (cons f args)))
-     (println [list is-positive is-negative])
-     (if is-negative
-         (list '- expr)
-         expr)]))
+  (set-clingo-control-config! ctrl
+   '[("solve.models" . 0)]))
 
 (define (print-model model)
   (define symbols (clingo-model-symbols model 'clingo-show-type-shown))
-  (println (length symbols))
-
-  (println (for/list ([symbol symbols])
-             (clingo-symbol-to-string symbol)))
-  (displayln
+  (define sym-strs
+    (for/list ([symbol symbols])
+      (clingo-symbol-to-string symbol)))
+  (define mapped-strs
    (for/list ([symbol symbols])
-     (symbol->term symbol))))
+     (define term (symbol->term symbol))
+     (list
+      term
+      (term->string
+       term))))
+  (for ([s-str sym-strs]
+        [m-pair mapped-strs]
+        #:unless (equal? s-str (second m-pair)))
+    (displayln (list (first m-pair) "==>" s-str (second m-pair))))
+  )
 
 (define ctrl (clingo-control-new '[] #f #f 20))
 (configure-to-enumerate-all-models ctrl)
