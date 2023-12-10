@@ -419,7 +419,7 @@
 ;; @return whether the call was successful; might set one of the following error codes:
 ;; - ::clingo_error_bad_alloc
 (define-clingo clingo-signature-create
-  (_fun _string _uint32 _bool (s : (_ptr o _clingo-signature)) -> (b : _bool)
+  (_fun _string _uint32 _stdbool (s : (_ptr o _clingo-signature)) -> (b : _stdbool)
         -> (if b s (raise-clingo-error))))
 
 ;; Get the name of a signature.
@@ -441,20 +441,20 @@
 ;;
 ;; @param[in] signature the target signature
 ;; @return whether the signature has no sign
-(define-clingo clingo-signature-is-positive (_fun _clingo-signature -> _bool))
+(define-clingo clingo-signature-is-positive (_fun _clingo-signature -> _stdbool))
 
 ;; Whether the signature is negative (is classically negated).
 ;;
 ;; @param[in] signature the target signature
 ;; @return whether the signature has a sign
-(define-clingo clingo-signature-is-negative (_fun _clingo-signature -> _bool))
+(define-clingo clingo-signature-is-negative (_fun _clingo-signature -> _stdbool))
 
 ;; Check if two signatures are equal.
 ;;
 ;; @param[in] a first signature
 ;; @param[in] b second signature
 ;; @return whether a == b
-(define-clingo clingo-signature-is-equal-to (_fun _clingo-signature _clingo-signature -> _bool))
+(define-clingo clingo-signature-is-equal-to (_fun _clingo-signature _clingo-signature -> _stdbool))
 
 ;; Check if a signature is less than another signature.
 ;;
@@ -464,7 +464,7 @@
 ;; @param[in] a first signature
 ;; @param[in] b second signature
 ;; @return whether a < b
-(define-clingo clingo-signature-is-less-than (_fun _clingo-signature _clingo-signature -> _bool))
+(define-clingo clingo-signature-is-less-than (_fun _clingo-signature _clingo-signature -> _stdbool))
 
 ;; Calculate a hash code of a signature.
 ;;
@@ -516,7 +516,7 @@
 ;; @return whether the call was successful; might set one of the following error codes:
 ;; - ::clingo_error_bad_alloc
 (define-clingo clingo-symbol-create-string
-  (_fun _string (symbol : (_ptr o _clingo-symbol)) -> (res : _bool) ->
+  (_fun _string (symbol : (_ptr o _clingo-symbol)) -> (res : _stdbool) ->
         (if res symbol (raise-clingo-error))))
 ;; Construct a symbol representing an id.
 ;;
@@ -529,7 +529,7 @@
 ;; @return whether the call was successful; might set one of the following error codes:
 ;; - ::clingo_error_bad_alloc
 (define-clingo clingo-symbol-create-id
-  (_fun _string _bool (symbol : (_ptr o _clingo-symbol)) -> (res : _bool)
+  (_fun _string _stdbool (symbol : (_ptr o _clingo-symbol)) -> (res : _stdbool)
         -> (if res symbol (raise-clingo-error))))
 ;; Construct a symbol representing a function or tuple.
 ;;
@@ -543,8 +543,8 @@
 ;; @return whether the call was successful; might set one of the following error codes:
 ;; - ::clingo_error_bad_alloc
 (define-clingo clingo-symbol-create-function
-  (_fun _string (arguments : (_list i _clingo-symbol)) [_size = (length arguments)] _bool
-        (symbol : (_ptr o _clingo-symbol)) -> (res : _bool)
+  (_fun _string (arguments : (_list i _clingo-symbol)) [_size = (length arguments)] _stdbool
+        (symbol : (_ptr o _clingo-symbol)) -> (res : _stdbool)
         -> (if res symbol (raise-clingo-error))))
 
 ;; @}
@@ -559,7 +559,7 @@
 ;; @return whether the call was successful; might set one of the following error codes:
 ;; - ::clingo_error_runtime if symbol is not of type ::clingo_symbol_type_number
 (define-clingo clingo-symbol-number
-  (_fun _clingo-symbol (number : (_ptr o _int)) -> (res : _bool) ->
+  (_fun _clingo-symbol (number : (_ptr o _int)) -> (res : _stdbool) ->
         (if res number (raise-clingo-error))))
 ;; Get the name of a symbol.
 ;;
@@ -571,7 +571,7 @@
 ;; @return whether the call was successful; might set one of the following error codes:
 ;; - ::clingo_error_runtime if symbol is not of type ::clingo_symbol_type_function
 (define-clingo clingo-symbol-name
-  (_fun _clingo-symbol (name : (_ptr o _string)) -> (res : _bool) ->
+  (_fun _clingo-symbol (name : (_ptr o _string)) -> (res : _stdbool) ->
         (if res name (raise-clingo-error))))
 ;; Get the string of a symbol.
 ;;
@@ -583,7 +583,7 @@
 ;; @return whether the call was successful; might set one of the following error codes:
 ;; - ::clingo_error_runtime if symbol is not of type ::clingo_symbol_type_string
 (define-clingo clingo-symbol-string
-  (_fun _clingo-symbol (name : (_ptr o _string)) -> (res : _bool) ->
+  (_fun _clingo-symbol (name : (_ptr o _string)) -> (res : _stdbool) ->
         (if res name (raise-clingo-error))))
 ;; Check if a function is positive (does not have a sign).
 ;;
@@ -591,28 +591,18 @@
 ;; @param[out] positive the result
 ;; @return whether the call was successful; might set one of the following error codes:
 ;; - ::clingo_error_runtime if symbol is not of type ::clingo_symbol_type_function
-(define-clingo clingo-symbol-is-positive-unsafe
-  (_fun _clingo-symbol (positive : (_box _bool)) -> (res : _bool) ->
-        (if res positive (raise-clingo-error)))
-  #:c-id clingo_symbol_is_positive)
-(define is-positive-result-box (box #false))
-(define (clingo-symbol-is-positive symbol)
-  (clingo-symbol-is-positive-unsafe symbol is-positive-result-box)
-  (unbox is-positive-result-box))
+(define-clingo clingo-symbol-is-positive
+  (_fun _clingo-symbol (positive : (_ptr o _stdbool)) -> (res : _stdbool) ->
+        (if res positive (raise-clingo-error))))
 ;; Check if a function is negative (has a sign).
 ;;
 ;; @param[in] symbol the target symbol
 ;; @param[out] negative the result
 ;; @return whether the call was successful; might set one of the following error codes:
 ;; - ::clingo_error_runtime if symbol is not of type ::clingo_symbol_type_function
-(define is-negative-result-box (box #false))
-(define-clingo clingo-symbol-is-negative-unsafe
-  (_fun _clingo-symbol (negative : (_box _bool)) -> (res : _bool) ->
-        (if res negative (raise-clingo-error)))
-  #:c-id clingo_symbol_is_negative)
-(define (clingo-symbol-is-negative symbol)
-  (clingo-symbol-is-negative-unsafe symbol is-negative-result-box)
-  (unbox is-negative-result-box))
+(define-clingo clingo-symbol-is-negative
+  (_fun _clingo-symbol (negative : (_ptr o _stdbool)) -> (res : _stdbool) ->
+        (if res negative (raise-clingo-error))))
 ;; Get the arguments of a symbol.
 ;;
 ;; @param[in] symbol the target symbol
@@ -623,7 +613,7 @@
 (define-clingo clingo-symbol-arguments
   (_fun _clingo-symbol
         (arguments : (_ptr o _pointer))
-        (arguments-size : (_ptr o _size)) -> (res : _bool) ->
+        (arguments-size : (_ptr o _size)) -> (res : _stdbool) ->
         (if res
             (if (equal? arguments-size 0)
                 '[]
@@ -644,7 +634,7 @@
 ;; @return whether the call was successful; might set one of the following error codes:
 ;; - ::clingo_error_bad_alloc
 (define-clingo clingo-symbol-to-string-size
-  (_fun _clingo-symbol (size : (_ptr o _size)) -> (res : _bool) ->
+  (_fun _clingo-symbol (size : (_ptr o _size)) -> (res : _stdbool) ->
         (if res size (raise-clingo-error))))
 ;; Get the string representation of a symbol.
 ;;
@@ -656,7 +646,7 @@
 ;;
 ;; @see clingo_symbol_to_string_size()
 (define-clingo clingo-symbol-to-string-unsafe
-  (_fun _clingo-symbol _bytes _size -> (res : _bool))
+  (_fun _clingo-symbol _bytes _size -> (res : _stdbool))
   #:c-id clingo_symbol_to_string)
 
 (define (clingo-symbol-to-string symbol)
@@ -677,7 +667,7 @@
 ;; @param[in] b second symbol
 ;; @return whether a == b
 (define-clingo clingo-symbol-is-equal-to
-  (_fun _clingo-symbol _clingo-symbol -> _bool))
+  (_fun _clingo-symbol _clingo-symbol -> _stdbool))
 ;; Check if a symbol is less than another symbol.
 ;;
 ;; Symbols are first compared by type.  If the types are equal, the values are
@@ -688,7 +678,7 @@
 ;; @param[in] b second symbol
 ;; @return whether a < b
 (define-clingo clingo-symbol-is-less-than
-  (_fun _clingo-symbol _clingo-symbol -> _bool))
+  (_fun _clingo-symbol _clingo-symbol -> _stdbool))
 ;; Calculate a hash code of a symbol.
 ;;
 ;; @param[in] symbol the target symbol
@@ -708,7 +698,7 @@
 ;; @return whether the call was successful; might set one of the following error codes:
 ;; - ::clingo_error_bad_alloc
 (define-clingo clingo-add-string
-  (_fun _string (result : (_ptr o _string)) -> (res : _bool) ->
+  (_fun _string (result : (_ptr o _string)) -> (res : _stdbool) ->
         (if res result (raise-clingo-error))))
 ;; Parse a term in string form.
 ;;
@@ -725,7 +715,7 @@
 ;; - ::clingo_error_runtime if parsing fails
 (define-clingo clingo-parse-term
   (_fun
-   _string _clingo-logger _pointer _uint [symbol : (_ptr o _clingo-symbol)] -> (res : _bool) ->
+   _string _clingo-logger _pointer _uint [symbol : (_ptr o _clingo-symbol)] -> (res : _stdbool) ->
    (if res symbol (raise-clingo-error))))
 
 
@@ -777,7 +767,7 @@
 ;; @param[out] size the number of atoms
 ;; @return whether the call was successful
 (define-clingo clingo-symbolic-atoms-size
-  (_fun _clingo-symbolic-atoms-pointer (size : (_ptr i _size)) -> (res : _bool) ->
+  (_fun _clingo-symbolic-atoms-pointer (size : (_ptr i _size)) -> (res : _stdbool) ->
         (if res size (raise-clingo-error))))
 
 ;; Get a forward iterator to the beginning of the sequence of all symbolic
@@ -789,7 +779,7 @@
 ;; @return whether the call was successful
 (define-clingo clingo-symbolic-atoms-begin
   (_fun _clingo-symbolic-atoms-pointer (_ptr i _clingo-signature)
-        [iterator : (_ptr o _clingo-symbolic-atom-iterator)] -> (res : _bool) ->
+        [iterator : (_ptr o _clingo-symbolic-atom-iterator)] -> (res : _stdbool) ->
         (if res iterator (raise-clingo-error))))
 
 ;; Iterator pointing to the end of the sequence of symbolic atoms.
@@ -800,7 +790,7 @@
 (define-clingo clingo-symbolic-atoms-end
   (_fun
    _clingo-symbolic-atoms-pointer
-   [iterator : (_ptr o _clingo-symbolic-atom-iterator)] -> (res : _bool) ->
+   [iterator : (_ptr o _clingo-symbolic-atom-iterator)] -> (res : _stdbool) ->
    (if res iterator (raise-clingo-error))))
 
 
@@ -813,7 +803,7 @@
 ;; @return whether the call was successful
 (define-clingo clingo-symbolic-atoms-find
   (_fun _clingo-symbolic-atoms-pointer _clingo-symbol
-        [iterator : (_ptr o _clingo-symbolic-atom-iterator)] -> (res : _bool) ->
+        [iterator : (_ptr o _clingo-symbolic-atom-iterator)] -> (res : _stdbool) ->
         (if res iterator (raise-clingo-error))))
 
 ;; Check if two iterators point to the same element (or end of the sequence).
@@ -825,7 +815,7 @@
 ;; @return whether the call was successful
 (define-clingo clingo-symbolic-atoms-iterator-is-equal-to
   (_fun _clingo-symbolic-atoms-pointer _clingo-symbolic-atom-iterator
-        _clingo-symbolic-atom-iterator [equal : (_ptr o _bool)] -> (res : _bool) ->
+        _clingo-symbolic-atom-iterator [equal : (_ptr o _stdbool)] -> (res : _stdbool) ->
         (if res equal (raise-clingo-error))))
 
 ;; Get the symbolic representation of an atom.
@@ -838,7 +828,7 @@
   (_fun
    _clingo-symbolic-atoms-pointer
    _clingo-symbolic-atom-iterator
-   [symbol : (_ptr o _clingo-symbol)] -> (res : _bool) ->
+   [symbol : (_ptr o _clingo-symbol)] -> (res : _stdbool) ->
    (if res symbol (raise-clingo-error))))
 
 ;; Check whether an atom is a fact.
@@ -854,7 +844,7 @@
 (define-clingo clingo-symbolic-atoms-is-fact
   (_fun
    _clingo-symbolic-atoms-pointer _clingo-symbolic-atom-iterator
-   (fact : (_ptr o _bool)) -> (res : _bool) ->
+   (fact : (_ptr o _stdbool)) -> (res : _stdbool) ->
    (if res fact (raise-clingo-error))))
 
 ;; Check whether an atom is external.
@@ -869,7 +859,7 @@
 (define-clingo clingo-symbolic-atoms-is-external
   (_fun
    _clingo-symbolic-atoms-pointer _clingo-symbolic-atom-iterator
-   [external : (_ptr o _bool)] -> (res : _bool) ->
+   [external : (_ptr o _stdbool)] -> (res : _stdbool) ->
    (if res external (raise-clingo-error)) ))
 
 ;; Returns the (numeric) aspif literal corresponding to the given symbolic atom.
@@ -885,7 +875,7 @@
 (define-clingo clingo-symbolic-atoms-literal
   (_fun
    _clingo-symbolic-atoms-pointer _clingo-symbolic-atom-iterator
-   [literal : (_ptr o _clingo-literal)] -> (res : _bool) ->
+   [literal : (_ptr o _clingo-literal)] -> (res : _stdbool) ->
    (if res literal (raise-clingo-error))))
 
 ;; Get the number of different predicate signatures used in the program.
@@ -895,7 +885,7 @@
 ;; @return whether the call was successful
 (define-clingo clingo-symbolic-atoms-signatures-size
   (_fun
-   _clingo-symbolic-atoms-pointer [size : (_ptr o _size)] -> (res : _bool) ->
+   _clingo-symbolic-atoms-pointer [size : (_ptr o _size)] -> (res : _stdbool) ->
    (if res size (raise-clingo-error))))
 
 ;; Get the predicate signatures occurring in a logic program.
@@ -909,7 +899,7 @@
 ;;
 ;; @see clingo_symbolic_atoms_signatures_size()
 (define-clingo clingo-symbolic-atoms-signatures-unsafe
-  (_fun _clingo-symbolic-atoms-pointer _pointer _size -> (res : _bool) ->
+  (_fun _clingo-symbolic-atoms-pointer _pointer _size -> (res : _stdbool) ->
         (if res (void) (raise-clingo-error)))
   #:c-id clingo_symbolic_atoms_signatures)
 
@@ -928,7 +918,7 @@
 (define-clingo clingo-symbolic-atoms-next
   (_fun
    _clingo-symbolic-atoms-pointer _clingo-symbolic-atom-iterator
-   [next : (_ptr o _clingo-symbolic-atom-iterator)] -> (res : _bool) ->
+   [next : (_ptr o _clingo-symbolic-atom-iterator)] -> (res : _stdbool) ->
    (if res next (raise-clingo-error))))
 
 ;; Check whether the given iterator points to some element with the sequence
@@ -942,7 +932,7 @@
 (define-clingo clingo-symbolic-atoms-is-valid
   (_fun
    _clingo-symbolic-atoms-pointer _clingo-symbolic-atom-iterator
-   [valid : (_ptr o _bool)] -> (res : _bool) ->
+   [valid : (_ptr o _stdbool)] -> (res : _stdbool) ->
    (if res valid (raise-clingo-error))))
 
 ;; Callback function to inject symbols.
@@ -954,7 +944,7 @@
 ;; - ::clingo_error_bad_alloc
 ;; @see ::clingo_ground_callback_t
 (define _clingo-symbol-callback
-  (_fun (_cvector o _clingo-symbol size) [size : _size] _pointer -> _bool))
+  (_fun (_cvector o _clingo-symbol size) [size : _size] _pointer -> _stdbool))
 
 ;; @}
 
@@ -1027,7 +1017,7 @@
 ;; @return whether the call was successful
 (define-clingo clingo-theory-atoms-term-type
   (_fun _clingo-theory-atoms-pointer _clingo-id
-        (type : (_ptr o _clingo-theory-term-type)) -> (res : _bool) ->
+        (type : (_ptr o _clingo-theory-term-type)) -> (res : _stdbool) ->
         (if res type (raise-clingo-error))))
 ;; Get the number of the given numeric theory term.
 ;;
@@ -1037,7 +1027,7 @@
 ;; @param[out] number the resulting number
 ;; @return whether the call was successful
 (define-clingo clingo-theory-atoms-term-number
-  (_fun _clingo-theory-atoms-pointer _clingo-id [number : (_ptr o _int)] -> (res : _bool)
+  (_fun _clingo-theory-atoms-pointer _clingo-id [number : (_ptr o _int)] -> (res : _stdbool)
     -> (if res number (raise-clingo-error)) ))
 ;; Get the name of the given constant or function theory term.
 ;;
@@ -1050,7 +1040,7 @@
 ;; @param[out] name the resulting name
 ;; @return whether the call was successful
 (define-clingo clingo-theory-atoms-term-name
-  (_fun _clingo-theory-atoms-pointer _clingo-id [name : (_ptr o _string)] -> (res : _bool)
+  (_fun _clingo-theory-atoms-pointer _clingo-id [name : (_ptr o _string)] -> (res : _stdbool)
     -> (if res name (raise-clingo-error)) ))
 ;; Get the arguments of the given function theory term.
 ;;
@@ -1062,7 +1052,7 @@
 ;; @return whether the call was successful
 (define-clingo clingo-theory-atoms-term-arguments-unsafe
   (_fun _clingo-theory-atoms-pointer _clingo-id
-        [arguments : (_ptr o _pointer)] [size : (_ptr o _size)] -> (res : _bool)
+        [arguments : (_ptr o _pointer)] [size : (_ptr o _size)] -> (res : _stdbool)
         -> (if res (values arguments size) (raise-clingo-error)))
   #:c-id clingo_theory_atoms_term_arguments)
 ;; clingo_id_t const **arguments
@@ -1078,7 +1068,7 @@
 ;; @return whether the call was successful; might set one of the following error codes:
 ;; - ::clingo_error_bad_alloc
 (define-clingo clingo-theory-atoms-term-to-string-size
-  (_fun _clingo-theory-atoms-pointer _clingo-id [size : (_ptr o _size)] -> (res : _bool)
+  (_fun _clingo-theory-atoms-pointer _clingo-id [size : (_ptr o _size)] -> (res : _stdbool)
     -> (if res size (raise-clingo-error))))
 ;; Get the string representation of the given theory term.
 ;;
@@ -1092,7 +1082,7 @@
 ;;
 ;; @see clingo_theory_atoms_term_to_string_size()
 (define-clingo clingo-theory-atoms-term-to-string-unsafe
-  (_fun _clingo-theory-atoms-pointer _clingo-id _bytes _size -> (res : _bool)
+  (_fun _clingo-theory-atoms-pointer _clingo-id _bytes _size -> (res : _stdbool)
     -> (if res (void) (raise-clingo-error)))
   #:c-id clingo_theory_atoms_term_to_string)
 (define (clingo-theory-atoms-term-to-string atoms term-id)
@@ -1114,7 +1104,7 @@
 ;; @return whether the call was successful
 (define-clingo clingo-theory-atoms-element-tuple-unsafe
   (_fun _clingo-theory-atoms-pointer _clingo-id
-        [tuple : (_ptr o _pointer)] [size : (_ptr o _size)] -> (res : _bool)
+        [tuple : (_ptr o _pointer)] [size : (_ptr o _size)] -> (res : _stdbool)
     -> (if res (values tuple size) (raise-clingo-error)) )
   #:c-id clingo_theory_atoms_element_tuple)
 (define (clingo-theory-atoms-element-tuple atoms term-id)
@@ -1130,7 +1120,7 @@
 ;; @return whether the call was successful
 (define-clingo clingo-theory-atoms-element-condition-unsafe
   (_fun _clingo-theory-atoms-pointer _clingo-id
-        [condition : (_ptr o _pointer)] [size : (_ptr o _size)] -> (res : _bool)
+        [condition : (_ptr o _pointer)] [size : (_ptr o _size)] -> (res : _stdbool)
     -> (if res (values condition size) (raise-clingo-error)) )
   #:c-id clingo_theory_atoms_element_condition)
 (define (clingo-theory-atoms-element-condition atoms term-id)
@@ -1151,7 +1141,7 @@
 ;; @return whether the call was successful
 (define-clingo clingo-theory-atoms-element-condition-id
   (_fun _clingo-theory-atoms-pointer _clingo-id
-        [condition : (_ptr o _clingo-literal)] -> (res : _bool)
+        [condition : (_ptr o _clingo-literal)] -> (res : _stdbool)
         -> (if res condition (raise-clingo-error))))
 ;; Get the size of the string representation of the given theory element (including the terminating 0).
 ;;
@@ -1162,7 +1152,7 @@
 ;; - ::clingo_error_bad_alloc
 (define-clingo clingo-theory-atoms-element-to-string-size
   (_fun _clingo-theory-atoms-pointer _clingo-id
-        [size : (_ptr o _size)] -> (res : _bool)
+        [size : (_ptr o _size)] -> (res : _stdbool)
         -> (if res size (raise-clingo-error))))
 ;; Get the string representation of the given theory element.
 ;;
@@ -1174,7 +1164,7 @@
 ;; - ::clingo_error_runtime if the size is too small
 ;; - ::clingo_error_bad_alloc
 (define-clingo clingo-theory-atoms-element-to-string-unsafe
-  (_fun _clingo-theory-atoms-pointer _clingo-id _bytes _size -> (res : _bool)
+  (_fun _clingo-theory-atoms-pointer _clingo-id _bytes _size -> (res : _stdbool)
     -> (if res (void) (raise-clingo-error)) )
   #:c-id clingo_theory_atoms_element_to_string)
 (define (clingo-theory-atoms-element-to-string atoms term-id)
@@ -1193,7 +1183,7 @@
 ;; @param[out] size the resulting number
 ;; @return whether the call was successful
 (define-clingo clingo-theory-atoms-size
-  (_fun _clingo-theory-atoms-pointer [size : (_ptr o _size)] -> (res : _bool)
+  (_fun _clingo-theory-atoms-pointer [size : (_ptr o _size)] -> (res : _stdbool)
     -> (if res size (raise-clingo-error)) ))
 ;; Get the theory term associated with the theory atom.
 ;;
@@ -1202,7 +1192,7 @@
 ;; @param[out] term the resulting term id
 ;; @return whether the call was successful
 (define-clingo clingo-theory-atoms-atom-term
-  (_fun _clingo-theory-atoms-pointer _clingo-id [term : (_ptr o _clingo-id)] -> (res : _bool)
+  (_fun _clingo-theory-atoms-pointer _clingo-id [term : (_ptr o _clingo-id)] -> (res : _stdbool)
     -> (if res term (raise-clingo-error))))
 ;; Get the theory elements associated with the theory atom.
 ;;
@@ -1213,7 +1203,7 @@
 ;; @return whether the call was successful
 (define-clingo clingo-theory-atoms-atom-elements-unsafe
   (_fun _clingo-theory-atoms-pointer _clingo-id
-        [elements : (_ptr o _pointer)] [size : (_ptr o _size)] -> (res : _bool)
+        [elements : (_ptr o _pointer)] [size : (_ptr o _size)] -> (res : _stdbool)
     -> (if res (values elements size) (raise-clingo-error)) )
   #:c-id clingo_theory_atoms_atom_elements)
 (define (clingo-theory-atoms-atom-elements atoms atom-id)
@@ -1227,7 +1217,7 @@
 ;; @param[out] has_guard whether the theory atom has a guard
 ;; @return whether the call was successful
 (define-clingo clingo-theory-atoms-atom-has-guard
-  (_fun _clingo-theory-atoms-pointer _clingo-id [has-guard : (_ptr o _bool)] -> (res : _bool)
+  (_fun _clingo-theory-atoms-pointer _clingo-id [has-guard : (_ptr o _stdbool)] -> (res : _stdbool)
     -> (if res has-guard (raise-clingo-error))))
 ;; Get the guard consisting of a theory operator and a theory term of the given theory atom.
 ;;
@@ -1242,7 +1232,7 @@
 (define-clingo clingo-theory-atoms-atom-guard
   (_fun _clingo-theory-atoms-pointer _clingo-id
         [connective : (_ptr o _string)]
-        [term : (_ptr o _clingo-id)] -> (res : _bool)
+        [term : (_ptr o _clingo-id)] -> (res : _stdbool)
     -> (if res (values connective term) (raise-clingo-error)) ))
 ;; Get the aspif literal associated with the given theory atom.
 ;;
@@ -1252,7 +1242,7 @@
 ;; @return whether the call was successful
 (define-clingo clingo-theory-atoms-atom-literal
   (_fun
-   _clingo-theory-atoms-pointer _clingo-id [literal : (_ptr o _clingo-literal)] -> (res : _bool)
+   _clingo-theory-atoms-pointer _clingo-id [literal : (_ptr o _clingo-literal)] -> (res : _stdbool)
     -> (if res literal (raise-clingo-error)) ))
 ;; Get the size of the string representation of the given theory atom (including the terminating 0).
 ;;
@@ -1262,7 +1252,7 @@
 ;; @return whether the call was successful; might set one of the following error codes:
 ;; - ::clingo_error_bad_alloc
 (define-clingo clingo-theory-atoms-atom-to-string-size
-  (_fun _clingo-theory-atoms-pointer _clingo-id [size : (_ptr o _size)] -> (res : _bool)
+  (_fun _clingo-theory-atoms-pointer _clingo-id [size : (_ptr o _size)] -> (res : _stdbool)
     -> (if res size (raise-clingo-error)) ))
 ;; Get the string representation of the given theory atom.
 ;;
@@ -1274,7 +1264,7 @@
 ;; - ::clingo_error_runtime if the size is too small
 ;; - ::clingo_error_bad_alloc
 (define-clingo clingo-theory-atoms-atom-to-string-unsafe
-  (_fun _clingo-theory-atoms-pointer _clingo-id _bytes _size -> (res : _bool)
+  (_fun _clingo-theory-atoms-pointer _clingo-id _bytes _size -> (res : _stdbool)
     -> (if res (void) (raise-clingo-error)))
   #:c-id clingo_theory_atoms_atom_to_string)
 (define (clingo-theory-atoms-atom-to-string atoms atom-id)
@@ -1340,14 +1330,14 @@
 ;; @param[in] assignment the target assignment
 ;; @return whether the assignment is conflicting
 (define-clingo clingo-assignment-has-conflict
-  (_fun _clingo-assignment-pointer -> _bool))
+  (_fun _clingo-assignment-pointer -> _stdbool))
 ;; Check if the given literal is part of a (partial) assignment.
 ;;
 ;; @param[in] assignment the target assignment
 ;; @param[in] literal the literal
 ;; @return whether the literal is valid
 (define-clingo clingo-assignment-has-literal
-  (_fun _clingo-assignment-pointer _clingo-literal -> _bool))
+  (_fun _clingo-assignment-pointer _clingo-literal -> _stdbool))
 ;; Determine the decision level of a given literal.
 ;;
 ;; @param[in] assignment the target assignment
@@ -1355,7 +1345,7 @@
 ;; @param[out] level the resulting level
 ;; @return whether the call was successful
 (define-clingo clingo-assignment-level
-  (_fun _clingo-assignment-pointer _clingo-literal [level : (_ptr o _uint32)] -> (res : _bool)
+  (_fun _clingo-assignment-pointer _clingo-literal [level : (_ptr o _uint32)] -> (res : _stdbool)
     -> (if res level (raise-clingo-error)) ))
 ;; Determine the decision literal given a decision level.
 ;;
@@ -1364,7 +1354,7 @@
 ;; @param[out] literal the resulting literal
 ;; @return whether the call was successful
 (define-clingo clingo-assignment-decision
-  (_fun _clingo-assignment-pointer _uint32 [literal : (_ptr o _clingo-literal)] -> (res : _bool)
+  (_fun _clingo-assignment-pointer _uint32 [literal : (_ptr o _clingo-literal)] -> (res : _stdbool)
     -> (if res literal (raise-clingo-error))))
 ;; Check if a literal has a fixed truth value.
 ;;
@@ -1373,7 +1363,7 @@
 ;; @param[out] is_fixed whether the literal is fixed
 ;; @return whether the call was successful
 (define-clingo clingo-assignment-is-fixed
-  (_fun _clingo-assignment-pointer _clingo-literal [is-fixed : (_ptr o _bool)] -> (res : _bool)
+  (_fun _clingo-assignment-pointer _clingo-literal [is-fixed : (_ptr o _stdbool)] -> (res : _stdbool)
     -> (if res is-fixed (raise-clingo-error)) ))
 ;; Check if a literal is true.
 ;;
@@ -1383,7 +1373,7 @@
 ;; @return whether the call was successful
 ;; @see clingo_assignment_truth_value()
 (define-clingo clingo-assignment-is-true
-  (_fun _clingo-assignment-pointer _clingo-literal [is-true : (_ptr o _bool)] -> (res : _bool)
+  (_fun _clingo-assignment-pointer _clingo-literal [is-true : (_ptr o _stdbool)] -> (res : _stdbool)
     -> (if res is-true (raise-clingo-error)) ))
 ;; Check if a literal has a fixed truth value.
 ;;
@@ -1393,7 +1383,7 @@
 ;; @return whether the call was successful
 ;; @see clingo_assignment_truth_value()
 (define-clingo clingo-assignment-is-false
-  (_fun _clingo-assignment-pointer _clingo-literal [is-false : (_ptr o _bool)] -> (res : _bool)
+  (_fun _clingo-assignment-pointer _clingo-literal [is-false : (_ptr o _stdbool)] -> (res : _stdbool)
     -> (if res is-false (raise-clingo-error)) ))
 ;; Determine the truth value of a given literal.
 ;;
@@ -1402,7 +1392,7 @@
 ;; @param[out] value the resulting truth value
 ;; @return whether the call was successful
 (define-clingo clingo-assignment-truth-value
-  (_fun _clingo-assignment-pointer _clingo-literal [value : (_ptr o _clingo-truth-value)] -> (res : _bool)
+  (_fun _clingo-assignment-pointer _clingo-literal [value : (_ptr o _clingo-truth-value)] -> (res : _stdbool)
     -> (if res value (raise-clingo-error)) ))
 ;; The number of (positive) literals in the assignment.
 ;;
@@ -1416,21 +1406,21 @@
 ;; @param[out] literal the literal
 ;; @return whether the call was successful
 (define-clingo clingo-assignment_at
-  (_fun _clingo-assignment-pointer _size [literal : (_ptr o _clingo-literal)] -> (res : _bool)
+  (_fun _clingo-assignment-pointer _size [literal : (_ptr o _clingo-literal)] -> (res : _stdbool)
     -> (if res literal (raise-clingo-error))))
 ;; Check if the assignment is total, i.e. there are no free literal.
 ;;
 ;; @param[in] assignment the target
 ;; @return wheather the assignment is total
 (define-clingo clingo-assignment-is-total
-  (_fun _clingo-assignment-pointer -> _bool))
+  (_fun _clingo-assignment-pointer -> _stdbool))
 ;; Returns the number of literals in the trail, i.e., the number of assigned literals.
 ;;
 ;; @param[in] assignment the target
 ;; @param[out] size the number of literals in the trail
 ;; @return whether the call was successful
 (define-clingo clingo-assignment-trail-size
-  (_fun _clingo-assignment-pointer [size : (_ptr o _uint32)] -> (res : _bool)
+  (_fun _clingo-assignment-pointer [size : (_ptr o _uint32)] -> (res : _stdbool)
     -> (if res size (raise-clingo-error)) ))
 ;; Returns the offset of the decision literal with the given decision level in
 ;; the trail.
@@ -1446,7 +1436,7 @@
 ;; @param[out] offset the offset of the decision literal
 ;; @return whether the call was successful
 (define-clingo clingo-assignment-trail-begin
-  (_fun _clingo-assignment-pointer _uint32 [offset : (_ptr o _uint32)] -> (res : _bool)
+  (_fun _clingo-assignment-pointer _uint32 [offset : (_ptr o _uint32)] -> (res : _stdbool)
     -> (if res offset (raise-clingo-error))))
 ;; Returns the offset following the last literal with the given decision level.
 ;;
@@ -1457,7 +1447,7 @@
 ;; @param[out] offset the offset
 ;; @return whether the call was successful
 (define-clingo clingo-assignment-trail-end
-  (_fun _clingo-assignment-pointer _uint32 [offset : (_ptr o _uint32)] -> (res : _bool)
+  (_fun _clingo-assignment-pointer _uint32 [offset : (_ptr o _uint32)] -> (res : _stdbool)
     -> (if res offset (raise-clingo-error))))
 ;; Returns the literal at the given position in the trail.
 ;;
@@ -1466,7 +1456,7 @@
 ;; @param[out] literal the literal
 ;; @return whether the call was successful
 (define-clingo clingo-assignment-trail-at
-  (_fun _clingo-assignment-pointer _uint32 [literal : (_ptr o _clingo-literal)] -> (res : _bool)
+  (_fun _clingo-assignment-pointer _uint32 [literal : (_ptr o _clingo-literal)] -> (res : _stdbool)
     -> (if res literal (raise-clingo-error))))
 
 ;; @}
@@ -1517,7 +1507,7 @@
 ;; @return whether the call was successful
 (define-clingo clingo-propagate-init-solver-literal
   (_fun _clingo-propagate-init-pointer _clingo-literal
-        [solver-literal : (_ptr o _clingo-literal)] -> (res : _bool) ->
+        [solver-literal : (_ptr o _clingo-literal)] -> (res : _stdbool) ->
         (if res solver-literal (raise-clingo-error))))
 ;; Add a watch for the solver literal in the given phase.
 ;;
@@ -1525,7 +1515,7 @@
 ;; @param[in] solver_literal the solver literal
 ;; @return whether the call was successful
 (define-clingo clingo-propagate-init-add-watch
-  (_fun _clingo-propagate-init-pointer _clingo-literal -> (res : _bool) ->
+  (_fun _clingo-propagate-init-pointer _clingo-literal -> (res : _stdbool) ->
         (if res (void) (raise-clingo-error))))
 ;; Add a watch for the solver literal in the given phase to the given solver thread.
 ;;
@@ -1534,7 +1524,7 @@
 ;; @param[in] thread_id the id of the solver thread
 ;; @return whether the call was successful
 (define-clingo clingo-propagate-init-add-watch-to-thread
-  (_fun _clingo-propagate-init-pointer _clingo-literal _clingo-id -> (res : _bool) ->
+  (_fun _clingo-propagate-init-pointer _clingo-literal _clingo-id -> (res : _stdbool) ->
         (if res (void) (raise-clingo-error)) ))
 ;; Remove the watch for the solver literal in the given phase.
 ;;
@@ -1542,7 +1532,7 @@
 ;; @param[in] solver_literal the solver literal
 ;; @return whether the call was successful
 (define-clingo clingo-propagate-init-remove-watch
-  (_fun _clingo-propagate-init-pointer _clingo-literal -> (res : _bool) ->
+  (_fun _clingo-propagate-init-pointer _clingo-literal -> (res : _stdbool) ->
         (if res (void) (raise-clingo-error))))
 ;; Remove the watch for the solver literal in the given phase from the given solver thread.
 ;;
@@ -1551,7 +1541,7 @@
 ;; @param[in] thread_id the id of the solver thread
 ;; @return whether the call was successful
 (define-clingo clingo-propagate-init-remove-watch-from-thread
-  (_fun _clingo-propagate-init-pointer _clingo-literal _uint32 -> (res : _bool) ->
+  (_fun _clingo-propagate-init-pointer _clingo-literal _uint32 -> (res : _stdbool) ->
         (if res (void) (raise-clingo-error)) ))
 ;; Freeze the given solver literal.
 ;;
@@ -1563,7 +1553,7 @@
 ;; @param[in] solver_literal the solver literal
 ;; @return whether the call was successful
 (define-clingo clingo-propagate-init-freeze-literal
-  (_fun _clingo-propagate-init-pointer _clingo-literal -> (res : _bool) ->
+  (_fun _clingo-propagate-init-pointer _clingo-literal -> (res : _stdbool) ->
         (if res (void) (raise-clingo-error)) ))
 ;; Get an object to inspect the symbolic atoms.
 ;;
@@ -1571,7 +1561,7 @@
 ;; @param[out] atoms the resulting object
 ;; @return whether the call was successful
 (define-clingo clingo-propagate-init-symbolic-atoms
-  (_fun _clingo-propagate-init-pointer [atoms : (_ptr o _clingo-symbolic-atoms-pointer)] -> (res : _bool) ->
+  (_fun _clingo-propagate-init-pointer [atoms : (_ptr o _clingo-symbolic-atoms-pointer)] -> (res : _stdbool) ->
         (if res atoms (raise-clingo-error)) ))
 ;; Get an object to inspect the theory atoms.
 ;;
@@ -1579,7 +1569,7 @@
 ;; @param[out] atoms the resulting object
 ;; @return whether the call was successful
 (define-clingo clingo-propagate-init-theory-atoms
-  (_fun _clingo-propagate-init-pointer [atoms : (_ptr o _clingo-theory-atoms-pointer)] -> (res : _bool) ->
+  (_fun _clingo-propagate-init-pointer [atoms : (_ptr o _clingo-theory-atoms-pointer)] -> (res : _stdbool) ->
         (if res atoms (raise-clingo-error))))
 ;; Get the number of threads used in subsequent solving.
 ;;
@@ -1622,7 +1612,7 @@
 ;; @return whether the call was successful; might set one of the following error codes:
 ;; - ::clingo_error_bad_alloc
 (define-clingo clingo-propagate-init-add-literal
-  (_fun _clingo-propagate-init-pointer _bool [result : (_ptr o _clingo-literal)] -> (res : _bool) ->
+  (_fun _clingo-propagate-init-pointer _stdbool [result : (_ptr o _clingo-literal)] -> (res : _stdbool) ->
         (if res result (raise-clingo-error)) ))
 ;; Add the given clause to the solver.
 ;;
@@ -1636,7 +1626,7 @@
 ;; - ::clingo_error_bad_alloc
 (define-clingo clingo-propagate-init-add-clause
   (_fun _clingo-propagate-init-pointer [ls : (_list i _clingo-literal)] [_size = (length ls)]
-        [result : (_ptr o _bool)] -> (res : _bool) ->
+        [result : (_ptr o _stdbool)] -> (res : _stdbool) ->
         (if res result (raise-clingo-error)) ))
 ;; Add the given weight constraint to the solver.
 ;;
@@ -1661,8 +1651,8 @@
         [_size = (length ls)]
         _clingo-weight
         _clingo-weight-constraint-type
-        _bool
-        [result : (_ptr o _bool)] -> (res : _bool) ->
+        _stdbool
+        [result : (_ptr o _stdbool)] -> (res : _stdbool) ->
         (if res result (raise-clingo-error))))
 ;; Add the given literal to minimize to the solver.
 ;;
@@ -1677,7 +1667,7 @@
 (define-clingo clingo-propagate-init-add-minimize
   (_fun _clingo-propagate-init-pointer _clingo-literal
         _clingo-weight
-        _clingo-weight -> (res : _bool) ->
+        _clingo-weight -> (res : _stdbool) ->
         (if res (void) (raise-clingo-error))))
 ;; Propagates consequences of the underlying problem excluding registered propagators.
 ;;
@@ -1689,7 +1679,7 @@
 ;; @return whether the call was successful; might set one of the following error codes:
 ;; - ::clingo_error_bad_alloc
 (define-clingo clingo-propagate-init-propagate
-  (_fun _clingo-propagate-init-pointer [result : (_ptr o _bool)] -> (res : _bool) ->
+  (_fun _clingo-propagate-init-pointer [result : (_ptr o _stdbool)] -> (res : _stdbool) ->
         (if res result (raise-clingo-error)) ))
 
 ;; @}
@@ -1738,7 +1728,7 @@
 ;; - ::clingo_error_bad_alloc
 ;; - ::clingo_error_logic if the assignment is conflicting
 (define-clingo clingo-propagate-control-add-literal
-  (_fun _clingo-propagate-control-pointer [result : (_ptr o _clingo-literal)] -> (res : _bool) ->
+  (_fun _clingo-propagate-control-pointer [result : (_ptr o _clingo-literal)] -> (res : _stdbool) ->
    (if res result (raise-clingo-error)) ))
 ;; Add a watch for the solver literal in the given phase.
 ;;
@@ -1751,7 +1741,7 @@
 ;; - ::clingo_error_logic if the literal is invalid
 ;; @see clingo_propagate_control_remove_watch()
 (define-clingo clingo-propagate-control-add-watch
-  (_fun _clingo-propagate-control-pointer _clingo-literal -> (res : _bool) ->
+  (_fun _clingo-propagate-control-pointer _clingo-literal -> (res : _stdbool) ->
    (if res (void) (raise-clingo-error)) ))
 ;; Check whether a literal is watched in the current solver thread.
 ;;
@@ -1760,7 +1750,7 @@
 ;;
 ;; @return whether the literal is watched
 (define-clingo clingo-propagate-control-has-watch
-  (_fun _clingo-propagate-control-pointer _clingo-literal -> _bool))
+  (_fun _clingo-propagate-control-pointer _clingo-literal -> _stdbool))
 ;; Removes the watch (if any) for the given solver literal.
 ;;
 ;; @note Similar to @ref clingo_propagate_init_add_watch() this just removes the watch in the current solver thread.
@@ -1784,7 +1774,7 @@
 ;; - ::clingo_error_bad_alloc
 (define-clingo clingo-propagate-control-add-clause
   (_fun _clingo-propagate-control-pointer [ls : (_list i _clingo-literal)] [_size = (length ls)]
-        _clingo-clause-type [result : (_ptr o _bool)] -> (res : _bool) ->
+        _clingo-clause-type [result : (_ptr o _stdbool)] -> (res : _stdbool) ->
    (if res result (raise-clingo-error)) ))
 ;; Propagate implied literals (resulting from added clauses).
 ;;
@@ -1797,7 +1787,7 @@
 ;; @return whether the call was successful; might set one of the following error codes:
 ;; - ::clingo_error_bad_alloc
 (define-clingo clingo-propagate-control-propagate
-  (_fun _clingo-propagate-control-pointer [result : (_ptr o _bool)] -> (res : _bool) ->
+  (_fun _clingo-propagate-control-pointer [result : (_ptr o _stdbool)] -> (res : _stdbool) ->
    (if res result (raise-clingo-error)) ))
 
 ;; @}
@@ -1805,14 +1795,14 @@
 
 ;; Typedef for @ref ::clingo_propagator::init().
 (define _clingo-propagator-init-callback
-  (_fun _clingo-propagate-init-pointer _pointer -> _bool))
+  (_fun _clingo-propagate-init-pointer _pointer -> _stdbool))
 
 ;; Typedef for @ref ::clingo_propagator::propagate().
 (define _clingo-propagator-propagate-callback
   (_fun _clingo-propagate-control-pointer
         (_list o _clingo-literal size)
         [size : _size]
-        _pointer -> _bool))
+        _pointer -> _stdbool))
 
 ;; Typedef for @ref ::clingo_propagator::undo().
 (define _clingo-propagator-undo-callback
@@ -1822,7 +1812,7 @@
 
 ;; Typedef for @ref ::clingo_propagator::check().
 (define _clingo-propagator-check-callback
-  (_fun _clingo-propagate-control-pointer _pointer -> _bool))
+  (_fun _clingo-propagate-control-pointer _pointer -> _stdbool))
 
 
 
@@ -1841,7 +1831,7 @@
     ;; @param[in] data user data for the callback
     ;; @return whether the call was successful
     ;; @see ::clingo_propagator_init_callback_t
-    [init (_fun _clingo-propagate-init-pointer _pointer -> _bool)]
+    [init (_fun _clingo-propagate-init-pointer _pointer -> _stdbool)]
     ;; Can be used to propagate solver literals given a @link clingo_assignment_t partial assignment@endlink.
     ;;
     ;; Called during propagation with a non-empty array of @link clingo_propagate_init_add_watch() watched solver literals@endlink
@@ -1884,7 +1874,7 @@
     [propagate
      (_fun _clingo-propagate-control-pointer
            (_list o _clingo-literal size)
-           [size : _size] _pointer -> _bool)]
+           [size : _size] _pointer -> _stdbool)]
     ;; Called whenever a solver undoes assignments to watched solver literals.
     ;;
     ;; This callback is meant to update assignment dependent state in the propagator.
@@ -1911,7 +1901,7 @@
     ;; @param[in] data user data for the callback
     ;; @return whether the call was successful
     ;; @see ::clingo_propagator_check_callback_t
-    [check (_fun _clingo-propagate-control-pointer _pointer -> _bool)]
+    [check (_fun _clingo-propagate-control-pointer _pointer -> _stdbool)]
     ;; This function allows a propagator to implement domain-specific heuristics.
     ;;
     ;; It is called whenever propagation reaches a fixed point and
@@ -1928,7 +1918,7 @@
     [decide
      (_fun _clingo-id _clingo-assignment-pointer
            _clingo-literal _pointer
-           (_ptr i _clingo-literal) -> _bool)]
+           (_ptr i _clingo-literal) -> _stdbool)]
 ])
 
 ;; @}
@@ -2003,7 +1993,7 @@
 ;; - ::clingo_error_bad_alloc
 ;; - ::clingo_error_runtime
 (define-clingo clingo-backend-begin
-  (_fun _clingo-backend-pointer -> (res : _bool) ->
+  (_fun _clingo-backend-pointer -> (res : _stdbool) ->
       (if res (void) (raise-clingo-error)) ))
 ;; Finalize the backend after using it.
 ;;
@@ -2012,7 +2002,7 @@
 ;; - ::clingo_error_bad_alloc
 ;; - ::clingo_error_runtime
 (define-clingo clingo-backend-end
-  (_fun _clingo-backend-pointer -> (res : _bool) ->
+  (_fun _clingo-backend-pointer -> (res : _stdbool) ->
       (if res (void) (raise-clingo-error)) ))
 ;; Add a rule to the program.
 ;;
@@ -2025,11 +2015,11 @@
 ;; @return whether the call was successful; might set one of the following error codes:
 ;; - ::clingo_error_bad_alloc
 (define-clingo clingo-backend-rule
-  (_fun _clingo-backend-pointer _bool
+  (_fun _clingo-backend-pointer _stdbool
         [als : (_list i _clingo-atom)]
         [_size = (length als)]
         [lls : (_list i _clingo-literal)]
-        [_size = (length lls)] -> (res : _bool) ->
+        [_size = (length lls)] -> (res : _stdbool) ->
       (if res (void) (raise-clingo-error)) ))
 ;; Add a weight rule to the program.
 ;;
@@ -2044,11 +2034,11 @@
 ;; @return whether the call was successful; might set one of the following error codes:
 ;; - ::clingo_error_bad_alloc
 (define-clingo clingo-backend-weight-rule
-  (_fun _clingo-backend-pointer _bool
+  (_fun _clingo-backend-pointer _stdbool
         [als : (_list i _clingo-atom)] [_size = (length als)]
         _clingo-weight
         [wls : (_list i _clingo-weighted-literal)]
-        [_size = (length wls)] -> (res : _bool) ->
+        [_size = (length wls)] -> (res : _stdbool) ->
       (if res (void) (raise-clingo-error)) ))
 ;; Add a minimize constraint (or weak constraint) to the program.
 ;;
@@ -2061,7 +2051,7 @@
 (define-clingo clingo-backend-minimize
   (_fun _clingo-backend-pointer _clingo-weight
         [wls : (_list i _clingo-weighted-literal)]
-        [_size = (length wls)] -> (res : _bool) ->
+        [_size = (length wls)] -> (res : _stdbool) ->
       (if res (void) (raise-clingo-error)) ))
 ;; Add a projection directive.
 ;;
@@ -2073,7 +2063,7 @@
 (define-clingo clingo-backend-project
   (_fun _clingo-backend-pointer
         [als : (_list i _clingo-atom)]
-        [_size = (length als)] -> (res : _bool) ->
+        [_size = (length als)] -> (res : _stdbool) ->
       (if res (void) (raise-clingo-error))))
 ;; Add an external statement.
 ;;
@@ -2084,7 +2074,7 @@
 ;; - ::clingo_error_bad_alloc
 (define-clingo clingo-backend-external
   (_fun _clingo-backend-pointer _clingo-atom
-        _clingo-external-type -> (res : _bool) ->
+        _clingo-external-type -> (res : _stdbool) ->
       (if res (void) (raise-clingo-error)) ))
 ;; Add an assumption directive.
 ;;
@@ -2096,7 +2086,7 @@
 (define-clingo clingo-backend-assume
   (_fun _clingo-backend-pointer
         [wls : (_list i _clingo-literal)]
-        [_size = (length wls)] -> (res : _bool) ->
+        [_size = (length wls)] -> (res : _stdbool) ->
       (if res (void) (raise-clingo-error)) ))
 ;; Add an heuristic directive.
 ;;
@@ -2114,7 +2104,7 @@
    _clingo-backend-pointer _clingo-atom
    _clingo-heuristic-type _int _uint
    [cls : (_list i _clingo-literal)]
-   [_size = (length cls)] -> (res : _bool) ->
+   [_size = (length cls)] -> (res : _stdbool) ->
       (if res (void) (raise-clingo-error)) ))
 ;; Add an edge directive.
 ;;
@@ -2129,7 +2119,7 @@
   (_fun
    _clingo-backend-pointer _int _int
    [cls : (_list i _clingo-literal)]
-   [_size = (length cls)] -> (res : _bool) ->
+   [_size = (length cls)] -> (res : _stdbool) ->
       (if res (void) (raise-clingo-error)) ))
 ;; Get a fresh atom to be used in aspif directives.
 ;;
@@ -2141,7 +2131,7 @@
   (_fun
    _clingo-backend-pointer
    (_ptr i _clingo-symbol)
-   [atom : (_ptr o _clingo-atom)] -> (res : _bool) ->
+   [atom : (_ptr o _clingo-atom)] -> (res : _stdbool) ->
       (if res atom (raise-clingo-error)) ))
 ;; Add a numeric theory term.
 ;;
@@ -2153,7 +2143,7 @@
 (define-clingo clingo-backend-theory-term-number
   (_fun
    _clingo-backend-pointer _int
-   [term-id : (_ptr o _clingo-id)] -> (res : _bool) ->
+   [term-id : (_ptr o _clingo-id)] -> (res : _stdbool) ->
       (if res term-id (raise-clingo-error)) ))
 ;; Add a theory term representing a string.
 ;;
@@ -2164,7 +2154,7 @@
 ;; - ::clingo_error_bad_alloc
 (define-clingo clingo-backend-theory-term-string
   (_fun _clingo-backend-pointer _string
-        [term-id : (_ptr o _clingo-id)] -> (res : _bool) ->
+        [term-id : (_ptr o _clingo-id)] -> (res : _stdbool) ->
       (if res term-id (raise-clingo-error)) ))
 ;; Add a theory term representing a sequence of theory terms.
 ;;
@@ -2179,7 +2169,7 @@
   (_fun _clingo-backend-pointer _clingo-theory-sequence-type
         [ils : (_list i _clingo-id)]
         [_size = (length ils)]
-        [term-id : (_ptr o _clingo-id)]  -> (res : _bool) ->
+        [term-id : (_ptr o _clingo-id)]  -> (res : _stdbool) ->
       (if res term-id (raise-clingo-error)) ))
 ;; Add a theory term representing a function.
 ;;
@@ -2194,7 +2184,7 @@
   (_fun _clingo-backend-pointer _string
         [arguments : (_list i _clingo-id)]
         [_size = (length arguments)]
-        [term-id : (_ptr o _clingo-id)] -> (res : _bool) ->
+        [term-id : (_ptr o _clingo-id)] -> (res : _stdbool) ->
       (if res term-id (raise-clingo-error)) ))
 ;; Convert the given symbol into a theory term.
 ;;
@@ -2205,7 +2195,7 @@
 ;; - ::clingo_error_bad_alloc
 (define-clingo clingo-backend-theory-term-symbol
   (_fun _clingo-backend-pointer _clingo-symbol
-        [term-id : (_ptr o _clingo-id)] -> (res : _bool) ->
+        [term-id : (_ptr o _clingo-id)] -> (res : _stdbool) ->
       (if res term-id (raise-clingo-error)) ))
 ;; Add a theory atom element.
 ;;
@@ -2222,7 +2212,7 @@
         [tuple : (_list i _clingo-id)] [_size = (length tuple)]
         [condition : (_list i _clingo-literal)]
         [_size = (length condition)]
-        [element-id : (_ptr o _clingo-id)] -> (res : _bool) ->
+        [element-id : (_ptr o _clingo-id)] -> (res : _stdbool) ->
       (if res element-id (raise-clingo-error)) ))
 ;; Add a theory atom without a guard.
 ;;
@@ -2239,7 +2229,7 @@
    _clingo-atom
    _clingo-id
    [elements : (_list i _clingo-id)]
-   [_size = (length elements)] -> (res : _bool) ->
+   [_size = (length elements)] -> (res : _stdbool) ->
       (if res (void) (raise-clingo-error)) ))
 ;; Add a theory atom with a guard.
 ;;
@@ -2259,7 +2249,7 @@
    _clingo-id
    [elements : (_list i _clingo-id)]
    [_size = (length elements)]
-   _string _clingo-id -> (res : _bool) ->
+   _string _clingo-id -> (res : _stdbool) ->
       (if res (void) (raise-clingo-error))))
 
 ;; @}
@@ -2318,7 +2308,7 @@
 (define-clingo clingo-configuration-root
   (_fun
    _clingo-configuration-pointer
-   [key : (_ptr o _clingo-id)] -> (res : _bool) ->
+   [key : (_ptr o _clingo-id)] -> (res : _stdbool) ->
       (if res key (raise-clingo-error))))
 ;; Get the type of a key.
 ;;
@@ -2331,7 +2321,7 @@
 (define-clingo clingo-configuration-type
   (_fun _clingo-configuration-pointer _clingo-id
         [type : (_ptr o _clingo-configuration-type-bitset)] ->
-        (res : _bool) ->
+        (res : _stdbool) ->
       (if res type (raise-clingo-error)) ))
 ;; Get the description of an entry.
 ;;
@@ -2342,7 +2332,7 @@
 (define-clingo clingo-configuration-description
   (_fun
    _clingo-configuration-pointer _clingo-id
-   [description : (_ptr o _string)] -> (res : _bool) ->
+   [description : (_ptr o _string)] -> (res : _stdbool) ->
       (if res description (raise-clingo-error)) ))
 
 ;; @name Functions to access arrays
@@ -2357,7 +2347,7 @@
 ;; @return whether the call was successful
 (define-clingo clingo-configuration-array-size
   (_fun _clingo-configuration-pointer _clingo-id
-        [size : (_ptr o _size)] -> (res : _bool) ->
+        [size : (_ptr o _size)] -> (res : _stdbool) ->
       (if res size (raise-clingo-error)) ))
 ;; Get the subkey at the given offset of an array entry.
 ;;
@@ -2371,7 +2361,7 @@
 (define-clingo clingo-configuration-array-at
   (_fun
    _clingo-configuration-pointer _clingo-id
-   _size [subkey : (_ptr o _clingo-id)] -> (res : _bool) ->
+   _size [subkey : (_ptr o _clingo-id)] -> (res : _stdbool) ->
       (if res subkey (raise-clingo-error)) ))
 ;; @}
 
@@ -2387,7 +2377,7 @@
 ;; @return whether the call was successful
 (define-clingo clingo-configuration-map-size
   (_fun _clingo-configuration-pointer _clingo-id
-        [size : (_ptr o _size)] -> (res : _bool) ->
+        [size : (_ptr o _size)] -> (res : _stdbool) ->
       (if res size (raise-clingo-error)) ))
 ;; Query whether the map has a key.
 ;;
@@ -2400,7 +2390,7 @@
 ;; @return whether the call was successful
 (define-clingo clingo-configuration-map-has-subkey
   (_fun _clingo-configuration-pointer _clingo-id _string
-        [result : (_ptr o _bool)] -> (res : _bool) ->
+        [result : (_ptr o _stdbool)] -> (res : _stdbool) ->
       (if res result (raise-clingo-error)) ))
 ;; Get the name associated with the offset-th subkey.
 ;;
@@ -2412,7 +2402,7 @@
 ;; @return whether the call was successful
 (define-clingo clingo-configuration-map-subkey-name
   (_fun _clingo-configuration-pointer _clingo-id _size
-        [name : (_ptr o _string)] -> (res : _bool) ->
+        [name : (_ptr o _string)] -> (res : _stdbool) ->
       (if res name (raise-clingo-error)) ))
 ;; Lookup a subkey under the given name.
 ;;
@@ -2425,7 +2415,7 @@
 ;; @return whether the call was successful
 (define-clingo clingo-configuration-map-at
   (_fun _clingo-configuration-pointer _clingo-id _string
-        [subkey : (_ptr o _clingo-id)] -> (res : _bool) ->
+        [subkey : (_ptr o _clingo-id)] -> (res : _stdbool) ->
       (if res subkey (raise-clingo-error)) ))
 ;; @}
 
@@ -2441,7 +2431,7 @@
 ;; @return whether the call was successful
 (define-clingo clingo-configuration-value-is-assigned
   (_fun _clingo-configuration-pointer _clingo-id
-        [assigned : (_ptr o _bool)] -> (res : _bool) ->
+        [assigned : (_ptr o _stdbool)] -> (res : _stdbool) ->
       (if res assigned (raise-clingo-error))))
 ;; Get the size of the string value of the given entry.
 ;;
@@ -2452,7 +2442,7 @@
 ;; @return whether the call was successful
 (define-clingo clingo-configuration-value-get-size
   (_fun _clingo-configuration-pointer
-        _clingo-id [size : (_ptr o _size)] -> (res : _bool) ->
+        _clingo-id [size : (_ptr o _size)] -> (res : _stdbool) ->
       (if res size (raise-clingo-error)) ))
 ;; Get the string value of the given entry.
 ;;
@@ -2465,7 +2455,7 @@
 ;; @return whether the call was successful
 (define-clingo clingo-configuration-value-get-unsafe
   (_fun _clingo-configuration-pointer _clingo-id
-        _bytes _size -> (res : _bool) ->
+        _bytes _size -> (res : _stdbool) ->
       (if res (void) (raise-clingo-error)))
   #:c-id clingo_configuration_value_get)
 (define (clingo-configuration-value-get config key)
@@ -2484,7 +2474,7 @@
 ;; @return whether the call was successful
 (define-clingo clingo-configuration-value-set
   (_fun _clingo-configuration-pointer _clingo-id
-        _string -> (res : _bool) ->
+        _string -> (res : _stdbool) ->
       (if res (void) (raise-clingo-error)) ))
 ;; @}
 
@@ -2551,7 +2541,7 @@
 ;; @param[out] key the root key
 ;; @return whether the call was successful
 (define-clingo clingo-statistics-root
-  (_fun _clingo-statistics-pointer [key : (_ptr o _uint64)] -> (res : _bool) ->
+  (_fun _clingo-statistics-pointer [key : (_ptr o _uint64)] -> (res : _stdbool) ->
       (if res key (raise-clingo-error)) ))
 ;; Get the type of a key.
 ;;
@@ -2561,7 +2551,7 @@
 ;; @return whether the call was successful
 (define-clingo clingo-statistics-type
   (_fun _clingo-statistics-pointer _uint64
-        [type : (_ptr o _clingo-statistics-type)] -> (res : _bool) ->
+        [type : (_ptr o _clingo-statistics-type)] -> (res : _stdbool) ->
       (if res type (raise-clingo-error)) ))
 
 ;; @name Functions to access arrays
@@ -2575,7 +2565,7 @@
 ;; @param[out] size the resulting size
 ;; @return whether the call was successful
 (define-clingo clingo-statistics-array-size
-  (_fun _clingo-statistics-pointer _uint64 [size : (_ptr o _size)] -> (res : _bool) ->
+  (_fun _clingo-statistics-pointer _uint64 [size : (_ptr o _size)] -> (res : _stdbool) ->
       (if res size (raise-clingo-error)) ))
 ;; Get the subkey at the given offset of an array entry.
 ;;
@@ -2587,7 +2577,7 @@
 ;; @return whether the call was successful
 (define-clingo clingo-statistics-array-at
   (_fun _clingo-statistics-pointer _uint64 _size
-        [subkey : (_ptr o _uint64)] -> (res : _bool) ->
+        [subkey : (_ptr o _uint64)] -> (res : _stdbool) ->
       (if res subkey (raise-clingo-error)) ))
 ;; Create the subkey at the end of an array entry.
 ;;
@@ -2599,7 +2589,7 @@
 ;; @return whether the call was successful
 (define-clingo clingo-statistics-array-push
   (_fun _clingo-statistics-pointer _uint64 _clingo-statistics-type
-        [subkey : (_ptr o _uint64)] -> (res : _bool) ->
+        [subkey : (_ptr o _uint64)] -> (res : _stdbool) ->
       (if res subkey (raise-clingo-error)) ))
 ;; @}
 
@@ -2614,7 +2604,7 @@
 ;; @param[out] size the resulting number
 ;; @return whether the call was successful
 (define-clingo clingo-statistics-map-size
-  (_fun _clingo-statistics-pointer _uint64 [size : (_ptr o _size)] -> (res : _bool) ->
+  (_fun _clingo-statistics-pointer _uint64 [size : (_ptr o _size)] -> (res : _stdbool) ->
       (if res size (raise-clingo-error)) ))
 ;; Test if the given map contains a specific subkey.
 ;;
@@ -2625,7 +2615,7 @@
 ;; @param[out] result true if the map has a subkey with the given name
 ;; @return whether the call was successful
 (define-clingo clingo-statistics-map-has-subkey
-  (_fun _clingo-statistics-pointer _uint64 _string [result : (_ptr o _bool)] -> (res : _bool) ->
+  (_fun _clingo-statistics-pointer _uint64 _string [result : (_ptr o _stdbool)] -> (res : _stdbool) ->
       (if res result (raise-clingo-error)) ))
 ;; Get the name associated with the offset-th subkey.
 ;;
@@ -2636,7 +2626,7 @@
 ;; @param[out] name the resulting name
 ;; @return whether the call was successful
 (define-clingo clingo-statistics-map-subkey-name
-  (_fun _clingo-statistics-pointer _uint64 _size [name : (_ptr o _string)] -> (res : _bool) ->
+  (_fun _clingo-statistics-pointer _uint64 _size [name : (_ptr o _string)] -> (res : _stdbool) ->
       (if res name (raise-clingo-error)) ))
 ;; Lookup a subkey under the given name.
 ;;
@@ -2649,7 +2639,7 @@
 ;; @return whether the call was successful
 (define-clingo clingo-statistics-map-at
   (_fun _clingo-statistics-pointer _uint64 _string
-        [subkey : (_ptr o _uint64)] -> (res : _bool) ->
+        [subkey : (_ptr o _uint64)] -> (res : _stdbool) ->
       (if res subkey (raise-clingo-error)) ))
 ;; Add a subkey with the given name.
 ;;
@@ -2662,7 +2652,7 @@
 ;; @return whether the call was successful
 (define-clingo clingo-statistics-map-add-subkey
   (_fun _clingo-statistics-pointer _uint64 _string
-        _clingo-statistics-type [subkey : (_ptr o  _uint64)] -> (res : _bool) ->
+        _clingo-statistics-type [subkey : (_ptr o  _uint64)] -> (res : _stdbool) ->
       (if res subkey (raise-clingo-error)) ))
 ;; @}
 
@@ -2677,7 +2667,7 @@
 ;; @param[out] value the resulting value
 ;; @return whether the call was successful
 (define-clingo clingo-statistics-value-get
-  (_fun _clingo-statistics-pointer _uint64 [value : (_ptr o _double)] -> (res : _bool) ->
+  (_fun _clingo-statistics-pointer _uint64 [value : (_ptr o _double)] -> (res : _stdbool) ->
       (if res value (raise-clingo-error)) ))
 ;; Set the value of the given entry.
 ;;
@@ -2687,7 +2677,7 @@
 ;; @param[out] value the new value
 ;; @return whether the call was successful
 (define-clingo clingo-statistics-value-set
-  (_fun _clingo-statistics-pointer _uint64 _double -> (res : _bool) ->
+  (_fun _clingo-statistics-pointer _uint64 _double -> (res : _stdbool) ->
       (if res (void) (raise-clingo-error)) ))
 ;; @}
 
@@ -2758,7 +2748,7 @@
 ;; @param[out] type the type of the model
 ;; @return whether the call was successful
 (define-clingo clingo-model-type
-  (_fun _clingo-model-pointer [type : (_ptr o _clingo-model-type)] -> (res : _bool) ->
+  (_fun _clingo-model-pointer [type : (_ptr o _clingo-model-type)] -> (res : _stdbool) ->
       (if res type (raise-clingo-error))))
 ;; Get the running number of the model.
 ;;
@@ -2766,7 +2756,7 @@
 ;; @param[out] number the number of the model
 ;; @return whether the call was successful
 (define-clingo clingo-model-number
-  (_fun _clingo-model-pointer [number : (_ptr o _uint64)] -> (res : _bool) ->
+  (_fun _clingo-model-pointer [number : (_ptr o _uint64)] -> (res : _stdbool) ->
       (if res number (raise-clingo-error)) ))
 ;; Get the number of symbols of the selected types in the model.
 ;;
@@ -2776,7 +2766,7 @@
 ;; @return whether the call was successful; might set one of the following error codes:
 ;; - ::clingo_error_bad_alloc
 (define-clingo clingo-model-symbols-size
-  (_fun _clingo-model-pointer _clingo-show-type [size : (_ptr o _size)] -> (res : _bool) ->
+  (_fun _clingo-model-pointer _clingo-show-type [size : (_ptr o _size)] -> (res : _stdbool) ->
       (if res size (raise-clingo-error))))
 ;; Get the symbols of the selected types in the model.
 ;;
@@ -2795,7 +2785,7 @@
 ;; @see clingo_model_symbols_size()
 (define-clingo clingo-model-symbols-unsafe
   (_fun _clingo-model-pointer _clingo-show-type
-        [symbols : (_list o _clingo-symbol size)] [size : _size] -> (res : _bool) ->
+        [symbols : (_list o _clingo-symbol size)] [size : _size] -> (res : _stdbool) ->
       (if res symbols (raise-clingo-error)))
   #:c-id clingo_model_symbols)
 (define (clingo-model-symbols model show-ty)
@@ -2808,7 +2798,7 @@
 ;; @param[out] contained whether the atom is contained
 ;; @return whether the call was successful
 (define-clingo clingo-model-contains
-  (_fun _clingo-model-pointer _clingo-symbol [contained : (_ptr o _bool)] -> (res : _bool) ->
+  (_fun _clingo-model-pointer _clingo-symbol [contained : (_ptr o _stdbool)] -> (res : _stdbool) ->
       (if res contained (raise-clingo-error)) ))
 ;; Check if a program literal is true in a model.
 ;;
@@ -2817,7 +2807,7 @@
 ;; @param[out] result whether the literal is true
 ;; @return whether the call was successful
 (define-clingo clingo-model-is-true
-  (_fun _clingo-model-pointer _clingo-literal [result : (_ptr o _bool)] -> (res : _bool) ->
+  (_fun _clingo-model-pointer _clingo-literal [result : (_ptr o _stdbool)] -> (res : _stdbool) ->
       (if res result (raise-clingo-error))))
 ;; Get the number of cost values of a model.
 ;;
@@ -2825,7 +2815,7 @@
 ;; @param[out] size the number of costs
 ;; @return whether the call was successful
 (define-clingo clingo-model-cost-size
-  (_fun _clingo-model-pointer [size : (_ptr o _size)] -> (res : _bool) ->
+  (_fun _clingo-model-pointer [size : (_ptr o _size)] -> (res : _stdbool) ->
       (if res size (raise-clingo-error)) ))
 ;; Get the cost vector of a model.
 ;;
@@ -2840,7 +2830,7 @@
 ;; @see clingo_model_optimality_proven()
 (define-clingo clingo-model-cost-unsafe
   (_fun _clingo-model-pointer
-        [costs : (_list o _int64 size)] [size : _size] -> (res : _bool) ->
+        [costs : (_list o _int64 size)] [size : _size] -> (res : _stdbool) ->
       (if res costs (raise-clingo-error)))
   #:c-id clingo_model_cost)
 (define (clingo-model-cost model)
@@ -2854,7 +2844,7 @@
 ;;
 ;; @see clingo_model_cost()
 (define-clingo clingo-model-optimality-proven
-  (_fun _clingo-model-pointer [proven : (_ptr o _bool)] -> (res : _bool) ->
+  (_fun _clingo-model-pointer [proven : (_ptr o _stdbool)] -> (res : _stdbool) ->
       (if res proven (raise-clingo-error))))
 ;; Get the id of the solver thread that found the model.
 ;;
@@ -2862,7 +2852,7 @@
 ;; @param[out] id the resulting thread id
 ;; @return whether the call was successful
 (define-clingo clingo-model-thread-id
-  (_fun _clingo-model-pointer [id : (_ptr o _clingo-id)] -> (res : _bool) ->
+  (_fun _clingo-model-pointer [id : (_ptr o _clingo-id)] -> (res : _stdbool) ->
       (if res id (raise-clingo-error)) ))
 ;; Add symbols to the model.
 ;;
@@ -2877,7 +2867,7 @@
 (define-clingo clingo-model-extend
   (_fun _clingo-model-pointer
         [symbols : (_list i _clingo-symbol)]
-        [_size = (length symbols)] -> (res : _bool) ->
+        [_size = (length symbols)] -> (res : _stdbool) ->
       (if res (void) (raise-clingo-error)) ))
 ;; @}
 
@@ -2892,7 +2882,7 @@
 ;; @return whether the call was successful
 (define-clingo clingo-model-context
   (_fun _clingo-model-pointer
-        [control : (_ptr o _clingo-solve-control-pointer)] -> (res : _bool) ->
+        [control : (_ptr o _clingo-solve-control-pointer)] -> (res : _stdbool) ->
       (if res control (raise-clingo-error)) ))
 ;; Get an object to inspect the symbolic atoms.
 ;;
@@ -2901,7 +2891,7 @@
 ;; @return whether the call was successful
 (define-clingo clingo-solve-control-symbolic-atoms
   (_fun _clingo-solve-control-pointer
-        [atoms : (_ptr o _clingo-symbolic-atoms-pointer)] -> (res : _bool) ->
+        [atoms : (_ptr o _clingo-symbolic-atoms-pointer)] -> (res : _stdbool) ->
       (if res atoms (raise-clingo-error)) ))
 ;; Add a clause that applies to the current solving step during model
 ;; enumeration.
@@ -2918,7 +2908,7 @@
 (define-clingo clingo-solve-control-add-clause
   (_fun _clingo-solve-control-pointer
         [clause : (_list i _clingo-literal)]
-        [_size = (length clause)] -> (res : _bool) ->
+        [_size = (length clause)] -> (res : _stdbool) ->
       (if res (void) (raise-clingo-error))))
 ;; @}
 
@@ -3005,7 +2995,7 @@
 (define _clingo-solve-event-callback
   (_fun
    _clingo-solve-event-type _pointer _pointer
-   (_box _bool)  -> _bool))
+   (_box _stdbool)  -> _stdbool))
 
 ;; Search handle to a solve call.
 ;;
@@ -3026,7 +3016,7 @@
 ;; - ::clingo_error_runtime if solving fails
 (define-clingo clingo-solve-handle-get
   (_fun _clingo-solve-handle-pointer
-        [result : (_ptr o _clingo-solve-result)] -> (res : _bool) ->
+        [result : (_ptr o _clingo-solve-result)] -> (res : _stdbool) ->
       (if res result (raise-clingo-error)) ))
 ;; Wait for the specified amount of time to check if the next result is ready.
 ;;
@@ -3037,7 +3027,7 @@
 ;; @param[in] timeout the maximum time to wait
 ;; @param[out] result whether the search has finished
 (define-clingo clingo-solve-handle-wait
-  (_fun _clingo-solve-handle-pointer _double [result : (_ptr o _bool)] -> _void
+  (_fun _clingo-solve-handle-pointer _double [result : (_ptr o _stdbool)] -> _void
         -> result))
 ;; Get the next model (or zero if there are no more models).
 ;;
@@ -3048,7 +3038,7 @@
 ;; - ::clingo_error_runtime if solving fails
 (define-clingo clingo-solve-handle-model
   (_fun _clingo-solve-handle-pointer
-        [model : (_ptr o _clingo-model-pointer)] -> (res : _bool) ->
+        [model : (_ptr o _clingo-model-pointer)] -> (res : _stdbool) ->
       (if res model (raise-clingo-error)) ))
 ;; When a problem is unsatisfiable, get a subset of the assumptions that made the problem unsatisfiable.
 ;;
@@ -3062,7 +3052,7 @@
 (define-clingo clingo-solve-handle-core-unsafe
   (_fun _clingo-solve-handle-pointer
         [core : (_ptr o _pointer)] ;; clingo_literal_t const **core,
-        [size : (_ptr o _size)] -> (res : _bool) ->
+        [size : (_ptr o _size)] -> (res : _stdbool) ->
       (if res (values core size) (raise-clingo-error)) )
   #:c-id clingo_solve_handle_core)
 (define (clingo-solve-handle-core solve-handle)
@@ -3079,7 +3069,7 @@
 ;; - ::clingo_error_bad_alloc
 ;; - ::clingo_error_runtime if solving fails
 (define-clingo clingo-solve-handle-resume
-  (_fun _clingo-solve-handle-pointer -> (res : _bool) ->
+  (_fun _clingo-solve-handle-pointer -> (res : _stdbool) ->
       (if res (void) (raise-clingo-error)) ))
 ;; Stop the running search and block until done.
 ;;
@@ -3088,7 +3078,7 @@
 ;; - ::clingo_error_bad_alloc
 ;; - ::clingo_error_runtime if solving fails
 (define-clingo clingo-solve-handle-cancel
-  (_fun _clingo-solve-handle-pointer -> (res : _bool) ->
+  (_fun _clingo-solve-handle-pointer -> (res : _stdbool) ->
       (if res (void) (raise-clingo-error)) ))
 ;; Stops the running search and releases the handle.
 ;;
@@ -3099,7 +3089,7 @@
 ;; - ::clingo_error_bad_alloc
 ;; - ::clingo_error_runtime if solving fails
 (define-clingo clingo-solve-handle-close
-  (_fun _clingo-solve-handle-pointer -> (res : _bool) ->
+  (_fun _clingo-solve-handle-pointer -> (res : _stdbool) ->
       (if res (void) (raise-clingo-error)) ))
 
 ;; @}
@@ -3134,7 +3124,7 @@
     ;; @param[in] data user data for the callback
     ;; @return whether the call was successful
     ;; bool (*init_program)(bool incremental, void *data);
-    [init-program (_fun _bool _pointer -> _bool)]
+    [init-program (_fun _stdbool _pointer -> _stdbool)]
     ;; Marks the beginning of a block of directives passed to the solver.
     ;;
     ;; @see @ref end_step
@@ -3142,7 +3132,7 @@
     ;; @param[in] data user data for the callback
     ;; @return whether the call was successful
     ;; bool (*begin_step)(void *data);
-    [begin-step (_fun _pointer -> _bool)]
+    [begin-step (_fun _pointer -> _stdbool)]
     ;; Marks the end of a block of directives passed to the solver.
     ;;
     ;; This function is called before solving starts.
@@ -3152,7 +3142,7 @@
     ;; @param[in] data user data for the callback
     ;; @return whether the call was successful
     ;; bool (*end_step)(void *data);
-    [end-step (_fun _pointer -> _bool)]
+    [end-step (_fun _pointer -> _stdbool)]
 
     ;; Observe rules passed to the solver.
     ;;
@@ -3164,10 +3154,10 @@
     ;; @param[in] data user data for the callback
     ;; @return whether the call was successful
     ;; bool (*rule)(bool choice, clingo_atom_t const *head, size_t head_size, clingo_literal_t const *body, size_t body_size, void *data);
-    [rule (_fun _bool
+    [rule (_fun _stdbool
                 [head : (_list i _clingo-atom)] [_size = (length head)]
                 [body : (_list i _clingo-literal)] [_size = (length body)]
-                _pointer -> _bool)]
+                _pointer -> _stdbool)]
     ;; Observe weight rules passed to the solver.
     ;;
     ;; @param[in] choice determines if the head is a choice or a disjunction
@@ -3180,10 +3170,10 @@
     ;; @return whether the call was successful
     ;; bool (*weight_rule)(bool choice, clingo_atom_t const *head, size_t head_size, clingo_weight_t lower_bound, clingo_weighted_literal_t const *body, size_t body_size, void *data);
     [weight-rule
-     (_fun _bool
+     (_fun _stdbool
            [head : (_list i _clingo-atom)] [_size = (length head)]
            [body : (_list i _clingo-weighted-literal)] [_size = (length body)]
-                _pointer -> _bool)]
+                _pointer -> _stdbool)]
     ;; Observe minimize constraints (or weak constraints) passed to the solver.
     ;;
     ;; @param[in] priority the priority of the constraint
@@ -3195,7 +3185,7 @@
     [minimize (_fun _clingo-weight
                     [literals : (_list i _clingo-weighted-literal)]
                     [_size = (length literals)]
-                    _pointer -> _bool)]
+                    _pointer -> _stdbool)]
     
     ;; Observe projection directives passed to the solver.
     ;;
@@ -3205,7 +3195,7 @@
     ;; @return whether the call was successful
     ;; bool (*project)(clingo_atom_t const *atoms, size_t size, void *data);
     [project (_fun [atoms : (_list i _clingo-atom)]
-                   [_size = (length atoms)] _pointer -> _bool)]
+                   [_size = (length atoms)] _pointer -> _stdbool)]
     ;; Observe shown atoms passed to the solver.
     ;; \note Facts do not have an associated aspif atom.
     ;; The value of the atom is set to zero.
@@ -3215,7 +3205,7 @@
     ;; @param[in] data user data for the callback
     ;; @return whether the call was successful
     ;; bool (*output_atom)(clingo_symbol_t symbol, clingo_atom_t atom, void *data);
-    [output-atom (_fun _clingo-symbol _clingo-atom _pointer -> _bool)]
+    [output-atom (_fun _clingo-symbol _clingo-atom _pointer -> _stdbool)]
     ;; Observe shown terms passed to the solver.
     ;;
     ;; @param[in] symbol the symbolic representation of the term
@@ -3227,7 +3217,7 @@
     [output-term (_fun _clingo-symbol
                        [condition : (_list i _clingo-literal)]
                        [_size = (length condition)]
-                       _pointer -> _bool)]
+                       _pointer -> _stdbool)]
     ;; Observe external statements passed to the solver.
     ;;
     ;; @param[in] atom the external atom
@@ -3235,7 +3225,7 @@
     ;; @param[in] data user data for the callback
     ;; @return whether the call was successful
     ;; bool (*external)(clingo_atom_t atom, clingo_external_type_t type, void *data);
-    [external (_fun _clingo-atom _clingo-external-type _pointer -> _bool)]
+    [external (_fun _clingo-atom _clingo-external-type _pointer -> _stdbool)]
     ;; Observe assumption directives passed to the solver.
     ;;
     ;; @param[in] literals the literals to assume (positive literals are true and negative literals false for the next solve call)
@@ -3245,7 +3235,7 @@
     ;; bool (*assume)(clingo_literal_t const *literals, size_t size, void *data);
     [assume (_fun [literals : (_list i _clingo-literal)]
                   [_size = (length literals)]
-                  _pointer -> _bool)]
+                  _pointer -> _stdbool)]
     ;; Observe heuristic directives passed to the solver.
     ;;
     ;; @param[in] atom the target atom
@@ -3261,7 +3251,7 @@
                      _uint
                      [condition : (_list i _clingo-literal)]
                      [_size = (length condition)]
-                     _pointer -> _bool)]
+                     _pointer -> _stdbool)]
     ;; Observe edge directives passed to the solver.
     ;;
     ;; @param[in] node_u the start vertex of the edge
@@ -3273,7 +3263,7 @@
     ;; bool (*acyc_edge)(int node_u, int node_v, clingo_literal_t const *condition, size_t size, void *data);
     [acyc-edge (_fun _int _int
                      [condition : (_list i _clingo-literal)]
-                     [_size = (length condition)] _pointer -> _bool)]
+                     [_size = (length condition)] _pointer -> _stdbool)]
 
     ;; Observe numeric theory terms.
     ;;
@@ -3282,7 +3272,7 @@
     ;; @param[in] data user data for the callback
     ;; @return whether the call was successful
     ;; bool (*theory_term_number)(clingo_id_t term_id, int number, void *data);
-    [theory-term-number (_fun _clingo-id _int _pointer -> _bool)]
+    [theory-term-number (_fun _clingo-id _int _pointer -> _stdbool)]
     ;; Observe string theory terms.
     ;;
     ;; @param[in] term_id the id of the term
@@ -3290,7 +3280,7 @@
     ;; @param[in] data user data for the callback
     ;; @return whether the call was successful
     ;; bool (*theory_term_string)(clingo_id_t term_id, char const *name, void *data);
-    [theory-term-string (_fun _clingo-id _string _pointer -> _bool)]
+    [theory-term-string (_fun _clingo-id _string _pointer -> _stdbool)]
     ;; Observe compound theory terms.
     ;;
     ;; The name_id_or_type gives the type of the compound term:
@@ -3309,7 +3299,7 @@
     [theory-term-compound
      (_fun _clingo-id _int
            [arguments : (_list i _clingo-id)]
-           [_size = (length arguments)] _pointer -> _bool)]
+           [_size = (length arguments)] _pointer -> _stdbool)]
     ;; Observe theory elements.
     ;;
     ;; @param element_id the id of the element
@@ -3324,7 +3314,7 @@
      (_fun _clingo-id
            [terms : (_list i _clingo-id)] [_size = (length terms)]
            [condition : (_list i _clingo-id)] [_size = (length condition)]
-           _pointer -> _bool)]
+           _pointer -> _stdbool)]
     ;; Observe theory atoms without guard.
     ;;
     ;; @param[in] atom_id_or_zero the id of the atom or zero for directives
@@ -3337,7 +3327,7 @@
     [theory-atom
      (_fun _clingo-id _clingo-id
            [elements : (_list i _clingo-id)] [_size = (length elements)]
-           _pointer -> _bool)]
+           _pointer -> _stdbool)]
     ;; Observe theory atoms with guard.
     ;;
     ;; @param[in] atom_id_or_zero the id of the atom or zero for directives
@@ -3353,7 +3343,7 @@
      (_fun _clingo-id _clingo-id
            [elements : (_list i _clingo-id)]
            [_size = (length elements)]
-           _clingo-id _clingo-id _pointer -> _bool)]
+           _clingo-id _clingo-id _pointer -> _stdbool)]
 ))
 ;; @}
 
@@ -3466,7 +3456,7 @@
    [arguments : (_list io _clingo-symbol size)]
    [size : _size]
    _pointer _clingo-symbol-callback _pointer
-   -> _bool))
+   -> _stdbool))
 
 ;; Control object holding grounding and solving state.
 (define _clingo-control-pointer (_cpointer 'clingo-control))
@@ -3494,7 +3484,7 @@
 (define-clingo clingo-control-new
   (_fun [arguments : (_list i _string)] [_size = (length arguments)]
         _clingo-logger _pointer _uint
-        [control : (_ptr o _clingo-control-pointer)]  -> (res : _bool) ->
+        [control : (_ptr o _clingo-control-pointer)]  -> (res : _stdbool) ->
       (if res control (raise-clingo-error)) ))
 
 ;; Free a control object created with clingo_control_new().
@@ -3513,7 +3503,7 @@
 ;; - ::clingo_error_bad_alloc
 ;; - ::clingo_error_runtime if parsing or checking fails
 (define-clingo clingo-control-load
-  (_fun _clingo-control-pointer _string -> (res : _bool) ->
+  (_fun _clingo-control-pointer _string -> (res : _stdbool) ->
       (if res (void) (raise-clingo-error))))
 
 ;; Extend the logic program with the given non-ground logic program in string form.
@@ -3533,7 +3523,7 @@
 (define-clingo clingo-control-add
   (_fun _clingo-control-pointer _string
         [parameters : (_list i _string)] [_size = (length parameters)]
-        _string -> (res : _bool) ->
+        _string -> (res : _stdbool) ->
       (if res (void) (raise-clingo-error))))
 
 ;; Ground the selected @link ::clingo_part parts @endlink of the current (non-ground) logic program.
@@ -3557,7 +3547,7 @@
 (define-clingo clingo-control-ground
   (_fun _clingo-control-pointer
         [parts : (_list i _clingo-part)] [_size = (length parts)]
-        _clingo-ground-callback _pointer -> (res : _bool) ->
+        _clingo-ground-callback _pointer -> (res : _stdbool) ->
       (if res (void) (raise-clingo-error)) ))
 
 ;; @}
@@ -3584,7 +3574,7 @@
         [assumptions : (_list i _clingo-literal)]
         [_size = (length assumptions)]
         _clingo-solve-event-callback _pointer
-        [handle : (_ptr o _clingo-solve-handle-pointer)] -> (res : _bool) ->
+        [handle : (_ptr o _clingo-solve-handle-pointer)] -> (res : _stdbool) ->
       (if res handle (raise-clingo-error))))
 ;; Clean up the domains of the grounding component using the solving
 ;; component's top level assignment.
@@ -3604,7 +3594,7 @@
 ;; @see clingo_control_get_enable_cleanup()
 ;; @see clingo_control_set_enable_cleanup()
 (define-clingo clingo-control-cleanup
-  (_fun _clingo-control-pointer -> (res : _bool) ->
+  (_fun _clingo-control-pointer -> (res : _stdbool) ->
       (if res (void) (raise-clingo-error))))
 ;; Assign a truth value to an external atom.
 ;;
@@ -3619,7 +3609,7 @@
 ;; @return whether the call was successful; might set one of the following error codes:
 ;; - ::clingo_error_bad_alloc
 (define-clingo clingo-control-assign-external
-  (_fun _clingo-control-pointer _clingo-literal _clingo-truth-value -> (res : _bool) ->
+  (_fun _clingo-control-pointer _clingo-literal _clingo-truth-value -> (res : _stdbool) ->
       (if res (void) (raise-clingo-error))))
 ;; Release an external atom.
 ;;
@@ -3634,7 +3624,7 @@
 ;; @return whether the call was successful; might set one of the following error codes:
 ;; - ::clingo_error_bad_alloc
 (define-clingo clingo-control-release-external
-  (_fun _clingo-control-pointer _clingo-literal -> (res : _bool) ->
+  (_fun _clingo-control-pointer _clingo-literal -> (res : _stdbool) ->
       (if res (void) (raise-clingo-error))))
 ;; Register a custom propagator with the control object.
 ;;
@@ -3651,7 +3641,7 @@
 ;; - ::clingo_error_bad_alloc
 (define-clingo clingo-control-register-propagator
   (_fun _clingo-control-pointer
-        _clingo-propagator-pointer _pointer _bool -> (res : _bool) ->
+        _clingo-propagator-pointer _pointer _stdbool -> (res : _stdbool) ->
       (if res (void) (raise-clingo-error))))
 ;; Check if the solver has determined that the internal program representation is conflicting.
 ;;
@@ -3664,7 +3654,7 @@
 ;; @param[in] control the target
 ;; @return whether the program representation is conflicting
 (define-clingo clingo-control-is-conflicting
-  (_fun _clingo-control-pointer -> _bool))
+  (_fun _clingo-control-pointer -> _stdbool))
 
 ;; Get a statistics object to inspect solver statistics.
 ;;
@@ -3687,7 +3677,7 @@
 ;; - ::clingo_error_bad_alloc
 (define-clingo clingo-control-statistics
   (_fun _clingo-control-pointer
-        [statistics : (_ptr o _clingo-statistics-pointer)] -> (res : _bool) ->
+        [statistics : (_ptr o _clingo-statistics-pointer)] -> (res : _stdbool) ->
       (if res statistics (raise-clingo-error))))
 ;; Interrupt the active solve call (or the following solve call right at the beginning).
 ;;
@@ -3705,7 +3695,7 @@
 ;; @param[out] clasp pointer to the ClaspFacade object (may be <code>nullptr</code>)
 ;; @return whether the call was successful
 (define-clingo clingo-control-clasp-facade
-  (_fun _clingo-control-pointer [clasp : (_ptr o _pointer)] -> (res : _bool) ->
+  (_fun _clingo-control-pointer [clasp : (_ptr o _pointer)] -> (res : _stdbool) ->
       (if res clasp (raise-clingo-error)) ))
 
 ;; @}
@@ -3722,7 +3712,7 @@
 ;; @return whether the call was successful
 (define-clingo clingo-control-configuration
   (_fun _clingo-control-pointer
-        [configuration : (_ptr o _clingo-configuration-pointer)] -> (res : _bool) ->
+        [configuration : (_ptr o _clingo-configuration-pointer)] -> (res : _stdbool) ->
       (if res configuration (raise-clingo-error))))
 
 ;; Configure how learnt constraints are handled during enumeration.
@@ -3741,7 +3731,7 @@
 ;; @param[in] enable whether to enable the assumption
 ;; @return whether the call was successful
 (define-clingo clingo-control-set-enable-enumeration-assumption
-  (_fun _clingo-control-pointer _bool -> (res : _bool) ->
+  (_fun _clingo-control-pointer _stdbool -> (res : _stdbool) ->
       (if res (void) (raise-clingo-error))))
 ;; Check whether the enumeration assumption is enabled.
 ;;
@@ -3749,7 +3739,7 @@
 ;; @param[in] control the target
 ;; @return whether using the enumeration assumption is enabled
 (define-clingo clingo-control-get-enable-enumeration-assumption
-  (_fun _clingo-control-pointer -> _bool))
+  (_fun _clingo-control-pointer -> _stdbool))
 
 ;; Enable automatic cleanup after solving.
 ;;
@@ -3762,7 +3752,7 @@
 ;; @see clingo_control_cleanup()
 ;; @see clingo_control_get_enable_cleanup()
 (define-clingo clingo-control-set-enable-cleanup
-  (_fun _clingo-control-pointer _bool -> (res : _bool) ->
+  (_fun _clingo-control-pointer _stdbool -> (res : _stdbool) ->
       (if res (void) (raise-clingo-error))))
 ;; Check whether automatic cleanup is enabled.
 ;;
@@ -3773,7 +3763,7 @@
 ;; @see clingo_control_cleanup()
 ;; @see clingo_control_set_enable_cleanup()
 (define-clingo clingo-control-get-enable-cleanup
-  (_fun _clingo-control-pointer -> _bool))
+  (_fun _clingo-control-pointer -> _stdbool))
 
 ;; @}
 
@@ -3788,7 +3778,7 @@
 ;; @return whether the call was successful
 (define-clingo clingo-control-get-const
   (_fun _clingo-control-pointer _string
-        [symbol : (_ptr o _clingo-symbol)] -> (res : _bool) ->
+        [symbol : (_ptr o _clingo-symbol)] -> (res : _stdbool) ->
       (if res symbol (raise-clingo-error))))
 ;; Check if there is a constant definition for the given constant.
 ;;
@@ -3801,7 +3791,7 @@
 ;; @see clingo_control_get_const()
 (define-clingo clingo-control-has-const
   (_fun _clingo-control-pointer _string
-        [exists : (_ptr o _bool)] -> (res : _bool) ->
+        [exists : (_ptr o _stdbool)] -> (res : _stdbool) ->
       (if res exists (raise-clingo-error))))
 ;; Get an object to inspect symbolic atoms (the relevant Herbrand base) used
 ;; for grounding.
@@ -3813,7 +3803,7 @@
 ;; @return whether the call was successful
 (define-clingo clingo-control-symbolic-atoms
   (_fun _clingo-control-pointer
-        [atoms : (_ptr o _clingo-symbolic-atoms-pointer)] -> (res : _bool) ->
+        [atoms : (_ptr o _clingo-symbolic-atoms-pointer)] -> (res : _stdbool) ->
       (if res atoms (raise-clingo-error))))
 ;; Get an object to inspect theory atoms that occur in the grounding.
 ;;
@@ -3824,7 +3814,7 @@
 ;; @return whether the call was successful
 (define-clingo clingo-control-theory-atoms
   (_fun _clingo-control-pointer
-        [atoms : (_ptr o _clingo-theory-atoms-pointer)] -> (res : _bool) ->
+        [atoms : (_ptr o _clingo-theory-atoms-pointer)] -> (res : _stdbool) ->
       (if res atoms (raise-clingo-error))))
 ;; Register a program observer with the control object.
 ;;
@@ -3834,7 +3824,7 @@
 ;; @param[in] data user data passed to the observer functions
 ;; @return whether the call was successful
 (define-clingo clingo-control-register-observer
-  (_fun _clingo-control-pointer _clingo-ground-program-observer-pointer _bool _pointer -> (res : _bool) ->
+  (_fun _clingo-control-pointer _clingo-ground-program-observer-pointer _stdbool _pointer -> (res : _stdbool) ->
       (if res (void) (raise-clingo-error))))
 ;; @}
 
@@ -3851,7 +3841,7 @@
 ;; - ::clingo_error_bad_alloc
 (define-clingo clingo-control-backend
   (_fun _clingo-control-pointer
-        [backend : (_ptr o _clingo-backend-pointer)] -> (res : _bool) ->
+        [backend : (_ptr o _clingo-backend-pointer)] -> (res : _stdbool) ->
       (if res backend (raise-clingo-error))))
 ;; @}
 
@@ -3912,7 +3902,7 @@
 (define _clingo-main-function
   (_fun _clingo-control-pointer
         [files : (_list i _string)]
-        [_size = (length files)] _pointer -> _bool))
+        [_size = (length files)] _pointer -> _stdbool))
 
 ;; Callback to print a model in default format.
 ;;
@@ -3920,7 +3910,7 @@
 ;;
 ;; @return whether the call was successful
 (define _clingo-default-model-printer
-  (_fun _pointer -> _bool))
+  (_fun _pointer -> _stdbool))
 
 
 ;; Callback to customize model printing.
@@ -3933,7 +3923,7 @@
 ;; @return whether the call was successful
 (define
   _clingo-model-printer
-  (_fun _clingo-model-pointer _clingo-default-model-printer _pointer _pointer -> _bool))
+  (_fun _clingo-model-pointer _clingo-default-model-printer _pointer _pointer -> _stdbool))
 
 ;; This struct contains a set of functions to customize the clingo application.
 (define-cstruct _clingo-application
@@ -3944,8 +3934,8 @@
    [main _clingo-main-function]                                     ;; callback to override clingo's main function
    [logger _clingo-logger]                                          ;; callback to override default logger
    [printer _clingo-model-printer]                                  ;; callback to override default model printing
-   [register-options (_fun _clingo-options-pointer _pointer -> _bool)] ;; callback to register options
-   [validate-options (_fun _pointer -> _bool)]                         ;; callback validate options
+   [register-options (_fun _clingo-options-pointer _pointer -> _stdbool)] ;; callback to register options
+   [validate-options (_fun _pointer -> _stdbool)]                         ;; callback validate options
 ))
 
 
@@ -3970,7 +3960,7 @@
 ;; @return whether the call was successful
 (define-clingo clingo-options-add
   (_fun _clingo-options-pointer _string _string _string
-        (_fun _string _pointer -> _bool) _pointer _bool _string -> (res : _bool) ->
+        (_fun _string _pointer -> _stdbool) _pointer _stdbool _string -> (res : _stdbool) ->
       (if res (void) (raise-clingo-error)) ))
 ;; Add an option that is a simple flag.
 ;;
@@ -3985,7 +3975,7 @@
 ;; @return whether the call was successful
 (define-clingo clingo-options-add-flag
   (_fun _clingo-options-pointer _string _string _string
-        [target : (_ptr o _bool)] -> (res : _bool) ->
+        [target : (_ptr o _stdbool)] -> (res : _stdbool) ->
       (if res target (raise-clingo-error)) ))
 
 ;; Run clingo with a customized main function (similar to python and lua embedding).
@@ -4009,7 +3999,7 @@
     ;; @param[in] data user data as given when registering the script
     ;; @return whether the function call was successful
     ;; bool (*execute) (clingo_location_t const *location, char const *code, void *data);
-    [execute (_fun _clingo-location-pointer _string _pointer -> _bool)]
+    [execute (_fun _clingo-location-pointer _string _pointer -> _stdbool)]
     ;; Call the function with the given name and arguments.
     ;; @param[in] location the location in the logic program of the function call
     ;; @param[in] name the name of the function
@@ -4022,22 +4012,22 @@
     ;; bool (*call) (clingo_location_t const *location, char const *name, clingo_symbol_t const *arguments, size_t arguments_size, clingo_symbol_callback_t symbol_callback, void *symbol_callback_data, void *data);
     [call (_fun _clingo-location-pointer _string
                 [arguments : (_list i _clingo-symbol)] [_size = (length arguments)]
-                _clingo-symbol-callback _pointer _pointer -> _bool)]
+                _clingo-symbol-callback _pointer _pointer -> _stdbool)]
     ;; Check if the given function is callable.
     ;; @param[in] name the name of the function
     ;; @param[out] result whether the function is callable
     ;; @param[in] data user data as given when registering the script
     ;; @return whether the function call was successful
     ;; bool (*callable) (char const * name, bool *result, void *data);
-    [callable (_fun _string [result : (_ptr o _bool)]
-                    _pointer -> (res : _bool) ->
+    [callable (_fun _string [result : (_ptr o _stdbool)]
+                    _pointer -> (res : _stdbool) ->
                     (if res result (raise-clingo-error)))]
     ;; Run the main function.
     ;; @param[in] control the control object to pass to the main function
     ;; @param[in] data user data as given when registering the script
     ;; @return whether the function call was successful
     ;; bool (*main) (clingo_control_t *control, void *data);
-    [main (_fun _clingo-control-pointer _pointer -> _bool)]
+    [main (_fun _clingo-control-pointer _pointer -> _stdbool)]
     ;; This function is called once when the script is deleted.
     ;; @param[in] data user data as given when registering the script
     ;; void (*free) (void *data);
@@ -4053,7 +4043,7 @@
 ;; @param[in] data user data to pass to callbacks in the script
 ;; @return whether the call was successful
 (define-clingo clingo-register-script
-  (_fun _string _clingo-script-pointer _pointer -> _bool))
+  (_fun _string _clingo-script-pointer _pointer -> _stdbool))
 ;; Get the version of the registered scripting language.
 ;;
 ;; @param[in] name the name of the scripting language
