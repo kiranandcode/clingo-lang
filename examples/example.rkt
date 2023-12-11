@@ -1,5 +1,7 @@
 #lang clingo
 
+(set-clingo-option! "solve.models" 0)
+
 (person (|| 'alice 'bob))
 
 (evil 'alice)

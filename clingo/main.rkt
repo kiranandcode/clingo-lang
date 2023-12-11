@@ -12,7 +12,7 @@
 
 (define-syntax (clingo-handle-form stx)
   (syntax-parse stx #:literals (set-clingo-option! clingo-rule)
-    [(_ (set-clingo-option! k vl)) #'(set-clingo-option k vl)]
+    [(_ (set-clingo-option! k vl)) #'(set-clingo-option! k vl)]
     [(_ (clingo-rule forms ...))
      #'(add-clingo-rule! (clingo-rule forms ...))]
     [(_ c)
