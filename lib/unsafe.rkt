@@ -1,6 +1,6 @@
 #lang racket
 (require ffi/unsafe ffi/cvector ffi/unsafe/define ffi/unsafe/define/conventions)
-(define clingo-path "/home/kirang/anaconda3/lib/libclingo.so")
+(define clingo-path "libclingo")
 
 (provide
  _clingo-literal
@@ -95,31 +95,27 @@
  clingo-assignment-is-false
  clingo-assignment-truth-value
  clingo-assignment-size
- clingo-assignment_at
  clingo-assignment-is-total
- clingo-assignment-trail-size
- clingo-assignment-trail-begin
- clingo-assignment-trail-end
- clingo-assignment-trail-at
+ #; clingo-assignment-at
+ #; clingo-assignment-trail-size
+ #; clingo-assignment-trail-begin
+ #; clingo-assignment-trail-end
+ #; clingo-assignment-trail-at
  _clingo-propagator-check-mode
  _clingo-weight-constraint-type
  clingo-propagate-init-solver-literal
  clingo-propagate-init-add-watch
  clingo-propagate-init-add-watch-to-thread
- clingo-propagate-init-remove-watch
- clingo-propagate-init-remove-watch-from-thread
- clingo-propagate-init-freeze-literal
+ #; clingo-propagate-init-remove-watch
+ #; clingo-propagate-init-remove-watch-from-thread
+ #; clingo-propagate-init-freeze-literal
  clingo-propagate-init-symbolic-atoms
  clingo-propagate-init-theory-atoms
  clingo-propagate-init-number-of-threads
  clingo-propagate-init-set-check-mode
  clingo-propagate-init-get-check-mode
  clingo-propagate-init-assignment
- clingo-propagate-init-add-literal
  clingo-propagate-init-add-clause
- clingo-propagate-init-add-weight-constraint
- clingo-propagate-init-add-minimize
- clingo-propagate-init-propagate
  _clingo-clause-type
  _clingo-propagate-control-pointer
  clingo-propagate-control-thread-id
@@ -150,14 +146,6 @@
  clingo-backend-heuristic
  clingo-backend-acyc-edge
  clingo-backend-add-atom
- clingo-backend-theory-term-number
- clingo-backend-theory-term-string
- clingo-backend-theory-term-sequence
- clingo-backend-theory-term-function
- clingo-backend-theory-term-symbol
- clingo-backend-theory-element
- clingo-backend-theory-atom
- clingo-backend-theory-atom-with-guard
  _clingo-configuration-type
  _clingo-configuration-type-bitset
  _clingo-configuration-pointer
@@ -211,7 +199,6 @@
  clingo-solve-handle-get
  clingo-solve-handle-wait
  clingo-solve-handle-model
- clingo-solve-handle-core
  clingo-solve-handle-resume
  clingo-solve-handle-cancel
  clingo-solve-handle-close
@@ -234,10 +221,6 @@
  clingo-control-interrupt
  clingo-control-clasp-facade
  clingo-control-configuration
- clingo-control-set-enable-enumeration-assumption
- clingo-control-get-enable-enumeration-assumption
- clingo-control-set-enable-cleanup
- clingo-control-get-enable-cleanup
  clingo-control-get-const
  clingo-control-has-const
  clingo-control-symbolic-atoms
@@ -252,10 +235,7 @@
  clingo-options-add
  clingo-options-add-flag
  clingo-main
- (struct-out clingo-script)
- clingo-register-script
- clingo-get-script-version
- )
+ (struct-out clingo-script))
 
 (define-ffi-definer define-clingo (ffi-lib clingo-path)
   #:make-c-id convention:hyphen->underscore)
@@ -1399,65 +1379,12 @@
 ;; @param[in] assignment the target
 ;; @return the number of literals
 (define-clingo clingo-assignment-size (_fun _clingo-assignment-pointer -> _size))
-;; The (positive) literal at the given offset in the assignment.
-;;
-;; @param[in] assignment the target
-;; @param[in] offset the offset of the literal
-;; @param[out] literal the literal
-;; @return whether the call was successful
-(define-clingo clingo-assignment_at
-  (_fun _clingo-assignment-pointer _size [literal : (_ptr o _clingo-literal)] -> (res : _stdbool)
-    -> (if res literal (raise-clingo-error))))
 ;; Check if the assignment is total, i.e. there are no free literal.
 ;;
 ;; @param[in] assignment the target
 ;; @return wheather the assignment is total
 (define-clingo clingo-assignment-is-total
   (_fun _clingo-assignment-pointer -> _stdbool))
-;; Returns the number of literals in the trail, i.e., the number of assigned literals.
-;;
-;; @param[in] assignment the target
-;; @param[out] size the number of literals in the trail
-;; @return whether the call was successful
-(define-clingo clingo-assignment-trail-size
-  (_fun _clingo-assignment-pointer [size : (_ptr o _uint32)] -> (res : _stdbool)
-    -> (if res size (raise-clingo-error)) ))
-;; Returns the offset of the decision literal with the given decision level in
-;; the trail.
-;;
-;; @note Literals in the trail are ordered by decision levels, where the first
-;; literal with a larger level than the previous literals is a decision; the
-;; following literals with same level are implied by this decision literal.
-;; Each decision level up to and including the current decision level has a
-;; valid offset in the trail.
-;;
-;; @param[in] assignment the target
-;; @param[in] level the decision level
-;; @param[out] offset the offset of the decision literal
-;; @return whether the call was successful
-(define-clingo clingo-assignment-trail-begin
-  (_fun _clingo-assignment-pointer _uint32 [offset : (_ptr o _uint32)] -> (res : _stdbool)
-    -> (if res offset (raise-clingo-error))))
-;; Returns the offset following the last literal with the given decision level.
-;;
-;; @note This function is the counter part to clingo_assignment_trail_begin().
-;;
-;; @param[in] assignment the target
-;; @param[in] level the decision level
-;; @param[out] offset the offset
-;; @return whether the call was successful
-(define-clingo clingo-assignment-trail-end
-  (_fun _clingo-assignment-pointer _uint32 [offset : (_ptr o _uint32)] -> (res : _stdbool)
-    -> (if res offset (raise-clingo-error))))
-;; Returns the literal at the given position in the trail.
-;;
-;; @param[in] assignment the target
-;; @param[in] offset the offset of the literal
-;; @param[out] literal the literal
-;; @return whether the call was successful
-(define-clingo clingo-assignment-trail-at
-  (_fun _clingo-assignment-pointer _uint32 [literal : (_ptr o _clingo-literal)] -> (res : _stdbool)
-    -> (if res literal (raise-clingo-error))))
 
 ;; @}
 
@@ -1526,35 +1453,8 @@
 (define-clingo clingo-propagate-init-add-watch-to-thread
   (_fun _clingo-propagate-init-pointer _clingo-literal _clingo-id -> (res : _stdbool) ->
         (if res (void) (raise-clingo-error)) ))
-;; Remove the watch for the solver literal in the given phase.
-;;
-;; @param[in] init the target
-;; @param[in] solver_literal the solver literal
-;; @return whether the call was successful
-(define-clingo clingo-propagate-init-remove-watch
-  (_fun _clingo-propagate-init-pointer _clingo-literal -> (res : _stdbool) ->
-        (if res (void) (raise-clingo-error))))
-;; Remove the watch for the solver literal in the given phase from the given solver thread.
-;;
-;; @param[in] init the target
-;; @param[in] solver_literal the solver literal
-;; @param[in] thread_id the id of the solver thread
-;; @return whether the call was successful
-(define-clingo clingo-propagate-init-remove-watch-from-thread
-  (_fun _clingo-propagate-init-pointer _clingo-literal _uint32 -> (res : _stdbool) ->
-        (if res (void) (raise-clingo-error)) ))
-;; Freeze the given solver literal.
-;;
-;; Any solver literal that is not frozen is subject to simplification and might be removed in a preprocessing step after propagator initialization.
-;; A propagator should freeze all literals over which it might add clauses during propagation.
-;; Note that any watched literal is automatically frozen and that it does not matter which phase of the literal is frozen.
-;;
-;; @param[in] init the target
-;; @param[in] solver_literal the solver literal
-;; @return whether the call was successful
-(define-clingo clingo-propagate-init-freeze-literal
-  (_fun _clingo-propagate-init-pointer _clingo-literal -> (res : _stdbool) ->
-        (if res (void) (raise-clingo-error)) ))
+
+
 ;; Get an object to inspect the symbolic atoms.
 ;;
 ;; @param[in] init the target
@@ -1598,22 +1498,6 @@
 ;; @return the assignment
 (define-clingo clingo-propagate-init-assignment
   (_fun _clingo-propagate-init-pointer -> _clingo-assignment-pointer))
-;; Add a literal to the solver.
-;;
-;; To be able to use the variable in clauses during propagation or add watches to it, it has to be frozen.
-;; Otherwise, it might be removed during preprocessing.
-;;
-;; @attention If varibales were added, subsequent calls to functions adding constraints or ::clingo_propagate_init_propagate() are expensive.
-;; It is best to add varables in batches.
-;;
-;; @param[in] init the target
-;; @param[in] freeze whether to freeze the literal
-;; @param[out] result the added literal
-;; @return whether the call was successful; might set one of the following error codes:
-;; - ::clingo_error_bad_alloc
-(define-clingo clingo-propagate-init-add-literal
-  (_fun _clingo-propagate-init-pointer _stdbool [result : (_ptr o _clingo-literal)] -> (res : _stdbool) ->
-        (if res result (raise-clingo-error)) ))
 ;; Add the given clause to the solver.
 ;;
 ;; @attention No further calls on the init object or functions on the assignment should be called when the result of this method is false.
@@ -1627,59 +1511,6 @@
 (define-clingo clingo-propagate-init-add-clause
   (_fun _clingo-propagate-init-pointer [ls : (_list i _clingo-literal)] [_size = (length ls)]
         [result : (_ptr o _stdbool)] -> (res : _stdbool) ->
-        (if res result (raise-clingo-error)) ))
-;; Add the given weight constraint to the solver.
-;;
-;; This function adds a constraint of form `literal <=> { lit=weight | (lit, weight) in literals } >= bound` to the solver.
-;; Depending on the type the `<=>` connective can be either a left implication, right implication, or equivalence.
-;;
-;; @attention No further calls on the init object or functions on the assignment should be called when the result of this method is false.
-;;
-;; @param[in] init the target
-;; @param[in] literal the literal of the constraint
-;; @param[in] literals the weighted literals
-;; @param[in] size the number of weighted literals
-;; @param[in] bound the bound of the constraint
-;; @param[in] type the type of the weight constraint
-;; @param[in] compare_equal if true compare equal instead of less than equal
-;; @param[out] result result indicating whether the problem became unsatisfiable
-;; @return whether the call was successful; might set one of the following error codes:
-;; - ::clingo_error_bad_alloc
-(define-clingo clingo-propagate-init-add-weight-constraint
-  (_fun _clingo-propagate-init-pointer _clingo-literal
-        [ls : (_list i _clingo-weighted-literal)]
-        [_size = (length ls)]
-        _clingo-weight
-        _clingo-weight-constraint-type
-        _stdbool
-        [result : (_ptr o _stdbool)] -> (res : _stdbool) ->
-        (if res result (raise-clingo-error))))
-;; Add the given literal to minimize to the solver.
-;;
-;; This corresponds to a weak constraint of form `:~ literal. [weight@priority]`.
-;;
-;; @param[in] init the target
-;; @param[in] literal the literal to minimize
-;; @param[in] weight the weight of the literal
-;; @param[in] priority the priority of the literal
-;; @return whether the call was successful; might set one of the following error codes:
-;; - ::clingo_error_bad_alloc
-(define-clingo clingo-propagate-init-add-minimize
-  (_fun _clingo-propagate-init-pointer _clingo-literal
-        _clingo-weight
-        _clingo-weight -> (res : _stdbool) ->
-        (if res (void) (raise-clingo-error))))
-;; Propagates consequences of the underlying problem excluding registered propagators.
-;;
-;; @note The function has no effect if SAT-preprocessing is enabled.
-;; @attention No further calls on the init object or functions on the assignment should be called when the result of this method is false.
-;;
-;; @param[in] init the target
-;; @param[out] result result indicating whether the problem became unsatisfiable
-;; @return whether the call was successful; might set one of the following error codes:
-;; - ::clingo_error_bad_alloc
-(define-clingo clingo-propagate-init-propagate
-  (_fun _clingo-propagate-init-pointer [result : (_ptr o _stdbool)] -> (res : _stdbool) ->
         (if res result (raise-clingo-error)) ))
 
 ;; @}
@@ -2133,124 +1964,6 @@
    (_ptr i _clingo-symbol)
    [atom : (_ptr o _clingo-atom)] -> (res : _stdbool) ->
       (if res atom (raise-clingo-error)) ))
-;; Add a numeric theory term.
-;;
-;; @param[in] backend the target backend
-;; @param[in] number the value of the term
-;; @param[out] term_id the resulting term id
-;; @return whether the call was successful; might set one of the following error codes:
-;; - ::clingo_error_bad_alloc
-(define-clingo clingo-backend-theory-term-number
-  (_fun
-   _clingo-backend-pointer _int
-   [term-id : (_ptr o _clingo-id)] -> (res : _stdbool) ->
-      (if res term-id (raise-clingo-error)) ))
-;; Add a theory term representing a string.
-;;
-;; @param[in] backend the target backend
-;; @param[in] string the value of the term
-;; @param[out] term_id the resulting term id
-;; @return whether the call was successful; might set one of the following error codes:
-;; - ::clingo_error_bad_alloc
-(define-clingo clingo-backend-theory-term-string
-  (_fun _clingo-backend-pointer _string
-        [term-id : (_ptr o _clingo-id)] -> (res : _stdbool) ->
-      (if res term-id (raise-clingo-error)) ))
-;; Add a theory term representing a sequence of theory terms.
-;;
-;; @param[in] backend the target backend
-;; @param[in] type the type of the sequence
-;; @param[in] arguments the term ids of the terms in the sequence
-;; @param[in] size the number of elements of the sequence
-;; @param[out] term_id the resulting term id
-;; @return whether the call was successful; might set one of the following error codes:
-;; - ::clingo_error_bad_alloc
-(define-clingo clingo-backend-theory-term-sequence
-  (_fun _clingo-backend-pointer _clingo-theory-sequence-type
-        [ils : (_list i _clingo-id)]
-        [_size = (length ils)]
-        [term-id : (_ptr o _clingo-id)]  -> (res : _stdbool) ->
-      (if res term-id (raise-clingo-error)) ))
-;; Add a theory term representing a function.
-;;
-;; @param[in] backend the target backend
-;; @param[in] name the name of the function
-;; @param[in] arguments an array of term ids for the theory terms in the arguments
-;; @param[in] size the number of arguments
-;; @param[out] term_id the resulting term id
-;; @return whether the call was successful; might set one of the following error codes:
-;; - ::clingo_error_bad_alloc
-(define-clingo clingo-backend-theory-term-function
-  (_fun _clingo-backend-pointer _string
-        [arguments : (_list i _clingo-id)]
-        [_size = (length arguments)]
-        [term-id : (_ptr o _clingo-id)] -> (res : _stdbool) ->
-      (if res term-id (raise-clingo-error)) ))
-;; Convert the given symbol into a theory term.
-;;
-;; @param[in] backend the target backend
-;; @param[in] symbol the symbol to convert
-;; @param[out] term_id the resulting term id
-;; @return whether the call was successful; might set one of the following error codes:
-;; - ::clingo_error_bad_alloc
-(define-clingo clingo-backend-theory-term-symbol
-  (_fun _clingo-backend-pointer _clingo-symbol
-        [term-id : (_ptr o _clingo-id)] -> (res : _stdbool) ->
-      (if res term-id (raise-clingo-error)) ))
-;; Add a theory atom element.
-;;
-;; @param[in] backend the target backend
-;; @param[in] tuple the array of term ids represeting the tuple
-;; @param[in] tuple_size the size of the tuple
-;; @param[in] condition an array of program literals represeting the condition
-;; @param[in] condition_size the size of the condition
-;; @param[out] element_id the resulting element id
-;; @return whether the call was successful; might set one of the following error codes:
-;; - ::clingo_error_bad_alloc
-(define-clingo clingo-backend-theory-element
-  (_fun _clingo-backend-pointer
-        [tuple : (_list i _clingo-id)] [_size = (length tuple)]
-        [condition : (_list i _clingo-literal)]
-        [_size = (length condition)]
-        [element-id : (_ptr o _clingo-id)] -> (res : _stdbool) ->
-      (if res element-id (raise-clingo-error)) ))
-;; Add a theory atom without a guard.
-;;
-;; @param[in] backend the target backend
-;; @param[in] atom_id_or_zero a program atom or zero for theory directives
-;; @param[in] term_id the term id of the term associated with the theory atom
-;; @param[in] elements an array of element ids for the theory atoms's elements
-;; @param[in] size the number of elements
-;; @return whether the call was successful; might set one of the following error codes:
-;; - ::clingo_error_bad_alloc
-(define-clingo clingo-backend-theory-atom
-  (_fun
-   _clingo-backend-pointer
-   _clingo-atom
-   _clingo-id
-   [elements : (_list i _clingo-id)]
-   [_size = (length elements)] -> (res : _stdbool) ->
-      (if res (void) (raise-clingo-error)) ))
-;; Add a theory atom with a guard.
-;;
-;; @param[in] backend the target backend
-;; @param[in] atom_id_or_zero a program atom or zero for theory directives
-;; @param[in] term_id the term id of the term associated with the theory atom
-;; @param[in] elements an array of element ids for the theory atoms's elements
-;; @param[in] size the number of elements
-;; @param[in] operator_name the string representation of a theory operator
-;; @param[in] right_hand_side_id the term id of the right hand side term
-;; @return whether the call was successful; might set one of the following error codes:
-;; - ::clingo_error_bad_alloc
-(define-clingo clingo-backend-theory-atom-with-guard
-  (_fun
-   _clingo-backend-pointer
-   _clingo-atom
-   _clingo-id
-   [elements : (_list i _clingo-id)]
-   [_size = (length elements)]
-   _string _clingo-id -> (res : _stdbool) ->
-      (if res (void) (raise-clingo-error))))
 
 ;; @}
 
@@ -3040,24 +2753,7 @@
   (_fun _clingo-solve-handle-pointer
         [model : (_ptr o _clingo-model-pointer)] -> (res : _stdbool) ->
       (if res model (raise-clingo-error)) ))
-;; When a problem is unsatisfiable, get a subset of the assumptions that made the problem unsatisfiable.
-;;
-;; If the program is not unsatisfiable, core is set to NULL and size to zero.
-;;
-;; @param[in] handle the target
-;; @param[out] core pointer where to store the core
-;; @param[out] size size of the given array
-;; @return whether the call was successful; might set one of the following error codes:
-;; - ::clingo_error_bad_alloc
-(define-clingo clingo-solve-handle-core-unsafe
-  (_fun _clingo-solve-handle-pointer
-        [core : (_ptr o _pointer)] ;; clingo_literal_t const **core,
-        [size : (_ptr o _size)] -> (res : _stdbool) ->
-      (if res (values core size) (raise-clingo-error)) )
-  #:c-id clingo_solve_handle_core)
-(define (clingo-solve-handle-core solve-handle)
-  (define-values (core size) (clingo-solve-handle-core-unsafe solve-handle))
-  (cast core _pointer (_list o _clingo-literal size)))
+
 ;; Discards the last model and starts the search for the next one.
 ;;
 ;; If the search has been started asynchronously, this function continues the search in the background.
@@ -3715,56 +3411,6 @@
         [configuration : (_ptr o _clingo-configuration-pointer)] -> (res : _stdbool) ->
       (if res configuration (raise-clingo-error))))
 
-;; Configure how learnt constraints are handled during enumeration.
-;;
-;; If the enumeration assumption is enabled, then all information learnt from
-;; the solver's various enumeration modes is removed after a solve call. This
-;; includes enumeration of cautious or brave consequences, enumeration of
-;; answer sets with or without projection, or finding optimal models, as well
-;; as clauses added with clingo_solve_control_add_clause().
-;;
-;; @attention For practical purposes, this option is only interesting for single-shot solving
-;; or before the last solve call to squeeze out a tiny bit of performance.
-;; Initially, the enumeration assumption is enabled.
-;;
-;; @param[in] control the target
-;; @param[in] enable whether to enable the assumption
-;; @return whether the call was successful
-(define-clingo clingo-control-set-enable-enumeration-assumption
-  (_fun _clingo-control-pointer _stdbool -> (res : _stdbool) ->
-      (if res (void) (raise-clingo-error))))
-;; Check whether the enumeration assumption is enabled.
-;;
-;; See ::clingo_control_set_enable_enumeration_assumption().
-;; @param[in] control the target
-;; @return whether using the enumeration assumption is enabled
-(define-clingo clingo-control-get-enable-enumeration-assumption
-  (_fun _clingo-control-pointer -> _stdbool))
-
-;; Enable automatic cleanup after solving.
-;;
-;; @note Cleanup is enabled by default.
-;;
-;; @param[in] control the target
-;; @param[in] enable whether to enable cleanups
-;; @return whether the call was successful
-;;
-;; @see clingo_control_cleanup()
-;; @see clingo_control_get_enable_cleanup()
-(define-clingo clingo-control-set-enable-cleanup
-  (_fun _clingo-control-pointer _stdbool -> (res : _stdbool) ->
-      (if res (void) (raise-clingo-error))))
-;; Check whether automatic cleanup is enabled.
-;;
-;; See ::clingo_control_set_enable_cleanup().
-;;
-;; @param[in] control the target
-;;
-;; @see clingo_control_cleanup()
-;; @see clingo_control_set_enable_cleanup()
-(define-clingo clingo-control-get-enable-cleanup
-  (_fun _clingo-control-pointer -> _stdbool))
-
 ;; @}
 
 ;; @name Program Inspection Functions
@@ -4036,22 +3682,386 @@
     [version _string]
 ))
 
-;; Add a custom scripting language to clingo.
-;;
-;; @param[in] name the name of the scripting language
-;; @param[in] script struct with functions implementing the language
-;; @param[in] data user data to pass to callbacks in the script
-;; @return whether the call was successful
-(define-clingo clingo-register-script
-  (_fun _string _clingo-script-pointer _pointer -> _stdbool))
-;; Get the version of the registered scripting language.
-;;
-;; @param[in] name the name of the scripting language
-;; @return the version
-(define-clingo clingo-get-script-version (_fun _string -> _string)
-  #:c-id clingo_script_version)
 
 ;; @}
 
 ;; }}}1
 
+(module+ latest
+  (provide
+   clingo-propagate-init-add-literal
+   clingo-propagate-init-add-weight-constraint
+   clingo-propagate-init-add-minimize
+   clingo-propagate-init-propagate
+   clingo-backend-theory-term-number
+   clingo-backend-theory-term-string
+   clingo-backend-theory-term-sequence
+   clingo-backend-theory-term-function
+   clingo-backend-theory-term-symbol
+   clingo-backend-theory-element
+   clingo-backend-theory-atom
+   clingo-backend-theory-atom-with-guard   
+   clingo-solve-handle-core
+   clingo-control-set-enable-enumeration-assumption
+   clingo-control-get-enable-enumeration-assumption
+   clingo-control-set-enable-cleanup
+   clingo-control-get-enable-cleanup
+   clingo-register-script
+   clingo-get-script-version)
+  ;; The (positive) literal at the given offset in the assignment.
+  ;;
+  ;; @param[in] assignment the target
+  ;; @param[in] offset the offset of the literal
+  ;; @param[out] literal the literal
+  ;; @return whether the call was successful
+  (define-clingo clingo-assignment-at
+    (_fun _clingo-assignment-pointer _size [literal : (_ptr o _clingo-literal)] -> (res : _stdbool)
+          -> (if res literal (raise-clingo-error))))
+  ;; Returns the number of literals in the trail, i.e., the number of assigned literals.
+  ;;
+  ;; @param[in] assignment the target
+  ;; @param[out] size the number of literals in the trail
+  ;; @return whether the call was successful
+  (define-clingo clingo-assignment-trail-size
+    (_fun _clingo-assignment-pointer [size : (_ptr o _uint32)] -> (res : _stdbool)
+          -> (if res size (raise-clingo-error)) ))
+  ;; Returns the offset of the decision literal with the given decision level in
+  ;; the trail.
+  ;;
+  ;; @note Literals in the trail are ordered by decision levels, where the first
+  ;; literal with a larger level than the previous literals is a decision; the
+  ;; following literals with same level are implied by this decision literal.
+  ;; Each decision level up to and including the current decision level has a
+  ;; valid offset in the trail.
+  ;;
+  ;; @param[in] assignment the target
+  ;; @param[in] level the decision level
+  ;; @param[out] offset the offset of the decision literal
+  ;; @return whether the call was successful
+  (define-clingo clingo-assignment-trail-begin
+    (_fun _clingo-assignment-pointer _uint32 [offset : (_ptr o _uint32)] -> (res : _stdbool)
+          -> (if res offset (raise-clingo-error))))
+  ;; Returns the offset following the last literal with the given decision level.
+  ;;
+  ;; @note This function is the counter part to clingo_assignment_trail_begin().
+  ;;
+  ;; @param[in] assignment the target
+  ;; @param[in] level the decision level
+  ;; @param[out] offset the offset
+  ;; @return whether the call was successful
+  (define-clingo clingo-assignment-trail-end
+    (_fun _clingo-assignment-pointer _uint32 [offset : (_ptr o _uint32)] -> (res : _stdbool)
+          -> (if res offset (raise-clingo-error))))
+  ;; Returns the literal at the given position in the trail.
+  ;;
+  ;; @param[in] assignment the target
+  ;; @param[in] offset the offset of the literal
+  ;; @param[out] literal the literal
+  ;; @return whether the call was successful
+  (define-clingo clingo-assignment-trail-at
+    (_fun _clingo-assignment-pointer _uint32 [literal : (_ptr o _clingo-literal)] -> (res : _stdbool)
+          -> (if res literal (raise-clingo-error))))
+
+  ;; Freeze the given solver literal.
+  ;;
+  ;; Any solver literal that is not frozen is subject to simplification and might be removed in a preprocessing step after propagator initialization.
+  ;; A propagator should freeze all literals over which it might add clauses during propagation.
+  ;; Note that any watched literal is automatically frozen and that it does not matter which phase of the literal is frozen.
+  ;;
+  ;; @param[in] init the target
+  ;; @param[in] solver_literal the solver literal
+  ;; @return whether the call was successful
+  (define-clingo clingo-propagate-init-freeze-literal
+    (_fun _clingo-propagate-init-pointer _clingo-literal -> (res : _stdbool) ->
+          (if res (void) (raise-clingo-error)) ))
+  ;; Remove the watch for the solver literal in the given phase.
+  ;;
+  ;; @param[in] init the target
+  ;; @param[in] solver_literal the solver literal
+  ;; @return whether the call was successful
+  (define-clingo clingo-propagate-init-remove-watch
+    (_fun _clingo-propagate-init-pointer _clingo-literal -> (res : _stdbool) ->
+          (if res (void) (raise-clingo-error))))
+  ;; Remove the watch for the solver literal in the given phase from the given solver thread.
+  ;;
+  ;; @param[in] init the target
+  ;; @param[in] solver_literal the solver literal
+  ;; @param[in] thread_id the id of the solver thread
+  ;; @return whether the call was successful
+  (define-clingo clingo-propagate-init-remove-watch-from-thread
+    (_fun _clingo-propagate-init-pointer _clingo-literal _uint32 -> (res : _stdbool) ->
+          (if res (void) (raise-clingo-error)) ))
+  
+
+  ;; Add the given weight constraint to the solver.
+  ;;
+  ;; This function adds a constraint of form `literal <=> { lit=weight | (lit, weight) in literals } >= bound` to the solver.
+  ;; Depending on the type the `<=>` connective can be either a left implication, right implication, or equivalence.
+  ;;
+  ;; @attention No further calls on the init object or functions on the assignment should be called when the result of this method is false.
+  ;;
+  ;; @param[in] init the target
+  ;; @param[in] literal the literal of the constraint
+  ;; @param[in] literals the weighted literals
+  ;; @param[in] size the number of weighted literals
+  ;; @param[in] bound the bound of the constraint
+  ;; @param[in] type the type of the weight constraint
+  ;; @param[in] compare_equal if true compare equal instead of less than equal
+  ;; @param[out] result result indicating whether the problem became unsatisfiable
+  ;; @return whether the call was successful; might set one of the following error codes:
+  ;; - ::clingo_error_bad_alloc
+  (define-clingo clingo-propagate-init-add-weight-constraint
+    (_fun _clingo-propagate-init-pointer _clingo-literal
+          [ls : (_list i _clingo-weighted-literal)]
+          [_size = (length ls)]
+          _clingo-weight
+          _clingo-weight-constraint-type
+          _stdbool
+          [result : (_ptr o _stdbool)] -> (res : _stdbool) ->
+          (if res result (raise-clingo-error))))
+  ;; Add the given literal to minimize to the solver.
+  ;;
+  ;; This corresponds to a weak constraint of form `:~ literal. [weight@priority]`.
+  ;;
+  ;; @param[in] init the target
+  ;; @param[in] literal the literal to minimize
+  ;; @param[in] weight the weight of the literal
+  ;; @param[in] priority the priority of the literal
+  ;; @return whether the call was successful; might set one of the following error codes:
+  ;; - ::clingo_error_bad_alloc
+  (define-clingo clingo-propagate-init-add-minimize
+    (_fun _clingo-propagate-init-pointer _clingo-literal
+          _clingo-weight
+          _clingo-weight -> (res : _stdbool) ->
+          (if res (void) (raise-clingo-error))))
+  ;; Propagates consequences of the underlying problem excluding registered propagators.
+  ;;
+  ;; @note The function has no effect if SAT-preprocessing is enabled.
+  ;; @attention No further calls on the init object or functions on the assignment should be called when the result of this method is false.
+  ;;
+  ;; @param[in] init the target
+  ;; @param[out] result result indicating whether the problem became unsatisfiable
+  ;; @return whether the call was successful; might set one of the following error codes:
+  ;; - ::clingo_error_bad_alloc
+  (define-clingo clingo-propagate-init-propagate
+    (_fun _clingo-propagate-init-pointer [result : (_ptr o _stdbool)] -> (res : _stdbool) ->
+          (if res result (raise-clingo-error)) ))
+  ;; Add a literal to the solver.
+  ;;
+  ;; To be able to use the variable in clauses during propagation or add watches to it, it has to be frozen.
+  ;; Otherwise, it might be removed during preprocessing.
+  ;;
+  ;; @attention If varibales were added, subsequent calls to functions adding constraints or ::clingo_propagate_init_propagate() are expensive.
+  ;; It is best to add varables in batches.
+  ;;
+  ;; @param[in] init the target
+  ;; @param[in] freeze whether to freeze the literal
+  ;; @param[out] result the added literal
+  ;; @return whether the call was successful; might set one of the following error codes:
+  ;; - ::clingo_error_bad_alloc
+  (define-clingo clingo-propagate-init-add-literal
+    (_fun _clingo-propagate-init-pointer _stdbool [result : (_ptr o _clingo-literal)] -> (res : _stdbool) ->
+          (if res result (raise-clingo-error)) ))
+
+  ;; Add a numeric theory term.
+  ;;
+  ;; @param[in] backend the target backend
+  ;; @param[in] number the value of the term
+  ;; @param[out] term_id the resulting term id
+  ;; @return whether the call was successful; might set one of the following error codes:
+  ;; - ::clingo_error_bad_alloc
+  (define-clingo clingo-backend-theory-term-number
+    (_fun
+     _clingo-backend-pointer _int
+     [term-id : (_ptr o _clingo-id)] -> (res : _stdbool) ->
+     (if res term-id (raise-clingo-error)) ))
+  ;; Add a theory term representing a string.
+  ;;
+  ;; @param[in] backend the target backend
+  ;; @param[in] string the value of the term
+  ;; @param[out] term_id the resulting term id
+  ;; @return whether the call was successful; might set one of the following error codes:
+  ;; - ::clingo_error_bad_alloc
+  (define-clingo clingo-backend-theory-term-string
+    (_fun _clingo-backend-pointer _string
+          [term-id : (_ptr o _clingo-id)] -> (res : _stdbool) ->
+          (if res term-id (raise-clingo-error)) ))
+  ;; Add a theory term representing a sequence of theory terms.
+  ;;
+  ;; @param[in] backend the target backend
+  ;; @param[in] type the type of the sequence
+  ;; @param[in] arguments the term ids of the terms in the sequence
+  ;; @param[in] size the number of elements of the sequence
+  ;; @param[out] term_id the resulting term id
+  ;; @return whether the call was successful; might set one of the following error codes:
+  ;; - ::clingo_error_bad_alloc
+  (define-clingo clingo-backend-theory-term-sequence
+    (_fun _clingo-backend-pointer _clingo-theory-sequence-type
+          [ils : (_list i _clingo-id)]
+          [_size = (length ils)]
+          [term-id : (_ptr o _clingo-id)]  -> (res : _stdbool) ->
+          (if res term-id (raise-clingo-error)) ))
+  ;; Add a theory term representing a function.
+  ;;
+  ;; @param[in] backend the target backend
+  ;; @param[in] name the name of the function
+  ;; @param[in] arguments an array of term ids for the theory terms in the arguments
+  ;; @param[in] size the number of arguments
+  ;; @param[out] term_id the resulting term id
+  ;; @return whether the call was successful; might set one of the following error codes:
+  ;; - ::clingo_error_bad_alloc
+  (define-clingo clingo-backend-theory-term-function
+    (_fun _clingo-backend-pointer _string
+          [arguments : (_list i _clingo-id)]
+          [_size = (length arguments)]
+          [term-id : (_ptr o _clingo-id)] -> (res : _stdbool) ->
+          (if res term-id (raise-clingo-error)) ))
+  ;; Convert the given symbol into a theory term.
+  ;;
+  ;; @param[in] backend the target backend
+  ;; @param[in] symbol the symbol to convert
+  ;; @param[out] term_id the resulting term id
+  ;; @return whether the call was successful; might set one of the following error codes:
+  ;; - ::clingo_error_bad_alloc
+  (define-clingo clingo-backend-theory-term-symbol
+    (_fun _clingo-backend-pointer _clingo-symbol
+          [term-id : (_ptr o _clingo-id)] -> (res : _stdbool) ->
+          (if res term-id (raise-clingo-error)) ))
+
+  ;; Add a theory atom element.
+  ;;
+  ;; @param[in] backend the target backend
+  ;; @param[in] tuple the array of term ids represeting the tuple
+  ;; @param[in] tuple_size the size of the tuple
+  ;; @param[in] condition an array of program literals represeting the condition
+  ;; @param[in] condition_size the size of the condition
+  ;; @param[out] element_id the resulting element id
+  ;; @return whether the call was successful; might set one of the following error codes:
+  ;; - ::clingo_error_bad_alloc
+  (define-clingo clingo-backend-theory-element
+    (_fun _clingo-backend-pointer
+          [tuple : (_list i _clingo-id)] [_size = (length tuple)]
+          [condition : (_list i _clingo-literal)]
+          [_size = (length condition)]
+          [element-id : (_ptr o _clingo-id)] -> (res : _stdbool) ->
+          (if res element-id (raise-clingo-error)) ))
+  ;; Add a theory atom without a guard.
+  ;;
+  ;; @param[in] backend the target backend
+  ;; @param[in] atom_id_or_zero a program atom or zero for theory directives
+  ;; @param[in] term_id the term id of the term associated with the theory atom
+  ;; @param[in] elements an array of element ids for the theory atoms's elements
+  ;; @param[in] size the number of elements
+  ;; @return whether the call was successful; might set one of the following error codes:
+  ;; - ::clingo_error_bad_alloc
+  (define-clingo clingo-backend-theory-atom
+    (_fun
+     _clingo-backend-pointer
+     _clingo-atom
+     _clingo-id
+     [elements : (_list i _clingo-id)]
+     [_size = (length elements)] -> (res : _stdbool) ->
+     (if res (void) (raise-clingo-error)) ))
+  ;; Add a theory atom with a guard.
+  ;;
+  ;; @param[in] backend the target backend
+  ;; @param[in] atom_id_or_zero a program atom or zero for theory directives
+  ;; @param[in] term_id the term id of the term associated with the theory atom
+  ;; @param[in] elements an array of element ids for the theory atoms's elements
+  ;; @param[in] size the number of elements
+  ;; @param[in] operator_name the string representation of a theory operator
+  ;; @param[in] right_hand_side_id the term id of the right hand side term
+  ;; @return whether the call was successful; might set one of the following error codes:
+  ;; - ::clingo_error_bad_alloc
+  (define-clingo clingo-backend-theory-atom-with-guard
+    (_fun
+     _clingo-backend-pointer
+     _clingo-atom
+     _clingo-id
+     [elements : (_list i _clingo-id)]
+     [_size = (length elements)]
+     _string _clingo-id -> (res : _stdbool) ->
+     (if res (void) (raise-clingo-error))))
+
+
+  ;; When a problem is unsatisfiable, get a subset of the assumptions that made the problem unsatisfiable.
+  ;;
+  ;; If the program is not unsatisfiable, core is set to NULL and size to zero.
+  ;;
+  ;; @param[in] handle the target
+  ;; @param[out] core pointer where to store the core
+  ;; @param[out] size size of the given array
+  ;; @return whether the call was successful; might set one of the following error codes:
+  ;; - ::clingo_error_bad_alloc
+  (define-clingo clingo-solve-handle-core-unsafe
+    (_fun _clingo-solve-handle-pointer
+          [core : (_ptr o _pointer)] ;; clingo_literal_t const **core,
+          [size : (_ptr o _size)] -> (res : _stdbool) ->
+          (if res (values core size) (raise-clingo-error)) )
+    #:c-id clingo_solve_handle_core)
+  (define (clingo-solve-handle-core solve-handle)
+    (define-values (core size) (clingo-solve-handle-core-unsafe solve-handle))
+    (cast core _pointer (_list o _clingo-literal size)))
+  ;; Configure how learnt constraints are handled during enumeration.
+  ;;
+  ;; If the enumeration assumption is enabled, then all information learnt from
+  ;; the solver's various enumeration modes is removed after a solve call. This
+  ;; includes enumeration of cautious or brave consequences, enumeration of
+  ;; answer sets with or without projection, or finding optimal models, as well
+  ;; as clauses added with clingo_solve_control_add_clause().
+  ;;
+  ;; @attention For practical purposes, this option is only interesting for single-shot solving
+  ;; or before the last solve call to squeeze out a tiny bit of performance.
+  ;; Initially, the enumeration assumption is enabled.
+  ;;
+  ;; @param[in] control the target
+  ;; @param[in] enable whether to enable the assumption
+  ;; @return whether the call was successful
+  (define-clingo clingo-control-set-enable-enumeration-assumption
+    (_fun _clingo-control-pointer _stdbool -> (res : _stdbool) ->
+          (if res (void) (raise-clingo-error))))
+  ;; Check whether the enumeration assumption is enabled.
+  ;;
+  ;; See ::clingo_control_set_enable_enumeration_assumption().
+  ;; @param[in] control the target
+  ;; @return whether using the enumeration assumption is enabled
+  (define-clingo clingo-control-get-enable-enumeration-assumption
+    (_fun _clingo-control-pointer -> _stdbool))
+  ;; Enable automatic cleanup after solving.
+  ;;
+  ;; @note Cleanup is enabled by default.
+  ;;
+  ;; @param[in] control the target
+  ;; @param[in] enable whether to enable cleanups
+  ;; @return whether the call was successful
+  ;;
+  ;; @see clingo_control_cleanup()
+  ;; @see clingo_control_get_enable_cleanup()
+  (define-clingo clingo-control-set-enable-cleanup
+    (_fun _clingo-control-pointer _stdbool -> (res : _stdbool) ->
+          (if res (void) (raise-clingo-error))))
+  ;; Check whether automatic cleanup is enabled.
+  ;;
+  ;; See ::clingo_control_set_enable_cleanup().
+  ;;
+  ;; @param[in] control the target
+  ;;
+  ;; @see clingo_control_cleanup()
+  ;; @see clingo_control_set_enable_cleanup()
+  (define-clingo clingo-control-get-enable-cleanup
+    (_fun _clingo-control-pointer -> _stdbool))
+  ;; Add a custom scripting language to clingo.
+  ;;
+  ;; @param[in] name the name of the scripting language
+  ;; @param[in] script struct with functions implementing the language
+  ;; @param[in] data user data to pass to callbacks in the script
+  ;; @return whether the call was successful
+  (define-clingo clingo-register-script
+    (_fun _string _clingo-script-pointer _pointer -> _stdbool))
+  ;; Get the version of the registered scripting language.
+  ;;
+  ;; @param[in] name the name of the scripting language
+  ;; @return the version
+  (define-clingo clingo-get-script-version (_fun _string -> _string)
+    #:c-id clingo_script_version)
+  )
