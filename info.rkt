@@ -1,7 +1,7 @@
 #lang info
 
 
-(define collection "clingo")
+(define collection 'multi)
 
 
 

@@ -1,9 +1,11 @@
 #lang racket
 
-(require "term.rkt" "rule.rkt" syntax/parse (for-syntax racket/string  racket/base syntax/parse))
+(require "term.rkt" "rule.rkt"
+         (for-syntax racket/string  racket/base syntax/parse syntax/parse/class/paren-shape))
 
-#; (provide
- (rename-out [clingo-not not]))
+(provide
+ (for-syntax atom constraint)
+ clingo-atom clingo-constraint clingo-rule)
 
 (begin-for-syntax
   (define (is-valid-symbol sym)
@@ -32,7 +34,7 @@
     (syntax-local-value stx (lambda () ((current-resolve-symbol-fun) stx))))
 
   (define-syntax-class atom-arg
-    #:datum-literals (.. ||)
+    #:datum-literals (.. || quote)
     #:attributes (datum)
     (pattern num:number
       #:attr datum (lambda () #'num))
@@ -65,7 +67,7 @@
                      (cons 'sym (list data ...))))))))
 
   (define-syntax-class atom
-    #:datum-literals (|| not)
+    #:datum-literals (|| not quote)
     #:attributes (datum)
     (pattern 'sym:id
       #:when (is-valid-symbol (syntax-e #'sym))
@@ -77,7 +79,7 @@
       (lambda ()
         (let ([binding-loc (resolve-binding-loc #'sym-variable)])
           (with-syntax ([fake-binder (datum->syntax #'sym #'sym-variable binding-loc)])
-            #'(begin (let ([fake-binder 1]) sym-variable)
+            #'(begin (let ([fake-binder #'fake-binder]) sym-variable)
                      'sym-variable)))))
     (pattern (not 'sym:id)
       #:when (is-valid-symbol (syntax-e #'sym))
@@ -90,19 +92,19 @@
       (lambda ()
         (let ([binding-loc (resolve-binding-loc #'sym-variable)])
           (with-syntax ([fake-binder (datum->syntax #'sym #'sym-variable binding-loc)])
-            #'(begin (let ([fake-binder 1]) sym-variable)
+            #'(begin (let ([fake-binder #'fake-binder]) sym-variable)
                      (list 'not 'sym-variable))))))
 
-    (pattern (not (sym:id arg:atom-arg ...))
+    (pattern (not (sym:id arg:atom-arg ...+))
       #:when (is-valid-symbol (syntax-e #'sym))
       #:attr datum
       (lambda ()
         (let ([binding-loc (resolve-binding-loc-fun #'sym)])
-          (with-syntax ([fake-binder (resolve-binding-loc #'sym)]
+          (with-syntax ([fake-binder (datum->syntax #'sym #'sym binding-loc)]
                         [(data ...) (map (lambda (f) (f)) (attribute arg.datum))])
             
-            #'(begin (let ([fake-binder 1]) sym)
-                     (cons 'not (cons 'sym (list data ...))))))))
+            #'(begin (let ([fake-binder #'fake-binder]) sym)
+                     (list 'not (cons 'sym (list data ...))))))))
     (pattern (|| arg:atom ...+)
       #:attr datum
       (lambda ()
@@ -114,40 +116,69 @@
       (lambda ()
         (let ([binding-loc (resolve-binding-loc-fun #'sym)]
               [fs (attribute arg.datum)])
-          (with-syntax ([fake-binder (resolve-binding-loc #'sym)]
+          (with-syntax ([fake-binder (datum->syntax #'sym #'sym binding-loc)]
                         [(data ...) (map (lambda (f) (f)) fs)])
-            #'(begin (let ([fake-binder 1]) sym)
+            #'(begin (let ([fake-binder #'sym]) sym)
                      (cons 'sym (list data  ...))))))
-      )))
+      ))
 
-(define-syntax (atom->datum stx)
+  (define-syntax-class constraint
+    #:datum-literals (== <= quote)
+    #:attributes (datum)
+    (pattern {~braces arg:atom ...}
+      #:attr datum
+      (lambda ()
+        (with-syntax ([(data ...) (map (lambda (f) (f)) (attribute arg.datum))])
+          #'(cons 'subset (list data ...)))))
+    (pattern (== {~braces arg:atom ...} (~or card:number card:id))
+      #:attr datum
+      (lambda ()
+        (with-syntax ([(data ...) (map (lambda (f) (f)) (attribute arg.datum))])
+          #'(card-eq card data ...))))
+    (pattern (<= (~or lower:number lower:id) {~braces arg:atom ...})
+      #:attr datum
+      (lambda ()
+        (with-syntax ([(data ...) (map (lambda (f) (f)) (attribute arg.datum))])
+          #'(card-between #:low lower card data ...))))
+    (pattern (<= (~or lower:number lower:id)
+                 {~braces arg:atom ...}
+                 (~or upper:number upper:id))
+      #:attr datum
+      (lambda ()
+        (with-syntax ([(data ...) (map (lambda (f) (f)) (attribute arg.datum))])
+          #'(card-between #:low lower #:high upper card data ...))))
+    (pattern (<= {~braces arg:atom ...} (~or upper:number upper:id))
+      #:attr datum
+      (lambda ()
+        (with-syntax ([(data ...) (map (lambda (f) (f)) (attribute arg.datum))])
+          #'(card-between #:high upper card data ...))))
+    (pattern term:atom
+      #:attr datum (lambda () ((attribute term.datum))))))
+
+(define-syntax (clingo-atom stx)
   (syntax-parse stx
     [(_ data:atom) ((attribute data.datum))]))
 
-
-(atom->datum (|| 'x y))
-
-
-
-#; (begin-for-syntax
-  
-
-  (define (is-uppercase sym) (string (symbol->string (syntax-e sym))))
-
-  (define-syntax-class term
-    
-    )
-  )
-
-#; (define-syntax (clingo-not stx)
+(define-syntax (clingo-constraint stx)
   (syntax-parse stx
-    [(_ term) #'(list 'not #'term)]))
+    [(_ data:constraint) ((attribute data.datum))]))
 
-#; (define-syntax (clingo-:- stx)
+(define-syntax (clingo-rule stx)
   (syntax-parse stx
-    [(_ :- term terms ...)
+    [(_ #false rhs ...)
+       #'(rule #false
+            (list (clingo-constraint rhs) ...))]
+    [(_ lhs:constraint rhs ...)
+     (define defined-variables '())
+     (define (handle-definition stx)
+       (set! defined-variables (cons stx defined-variables))
+       stx)
+     (define data
+       (parameterize ([current-resolve-symbol-fun handle-definition])
+         ((attribute lhs.datum))))
+     (with-syntax ([lhs-datum data]
+                   [(var ...) defined-variables])
+       #'(let-syntax ([var #'var] ...)
+           (rule lhs-datum
+               (list (clingo-constraint rhs) ...))))
      ]))
-
-#;(clingo-not 'a)
-
-#;(:- a (not a))
