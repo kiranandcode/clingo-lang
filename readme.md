@@ -16,6 +16,13 @@ Aim: to be able to call Clingo (an ASP solver) directly from Racket.
 ;;           (good bob))
 ```
 
+You'll need libclingo installed on your system.
+
+For example, on debian-based systems do:
+```
+sudo apt install gringo 
+```
+
 Files of interest:
 - see `unsafe.rkt` for an FFI binding to libclingo (currently hard codes the path to libclingo.so)
 - see `main.rkt` for an example use of the FFI binding (ideally at the end, we'd like to have a #lang)
