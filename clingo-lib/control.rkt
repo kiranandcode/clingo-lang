@@ -35,7 +35,7 @@
          #:part [part (clingo-current-part)])
   (unless ctrl
     (error "Attempt declare rule outside of a control section"))
-  #; (println (format "sending rule \"~a\"" (rule->string rule)))
+  (log-debug "sending rule \"~a\"" (rule->string rule))
   (clingo-control-add
    (clingo-control-control ctrl) part '[]
    (rule->string rule)))
@@ -46,7 +46,7 @@
          #:part [part (clingo-current-part)])
   (unless ctrl
     (error "Attempt declare constraint outside of a control section"))
-  #; (println (format "sending constraint \"~a\"" (format "~a." (constraint->string constraint))))
+  (log-debug "sending constraint \"~a\"" (format "~a." (constraint->string constraint)))
   (clingo-control-add
    (clingo-control-control ctrl) part '[]
    (format "~a." (constraint->string constraint))))

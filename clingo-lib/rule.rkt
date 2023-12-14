@@ -20,6 +20,7 @@
 (define atom-arg?
   (flat-rec-contract atom-arg?
    (or/c
+    number?
     symbol? ;; alice
     (cons/c '|| (non-empty-listof atom-arg?)) ;; (|| a b) ==> a;b
     (cons/c symbol? (non-empty-listof (or/c number? numeric-range? atom-arg?))) ;; (married alice claire) ==> married(alice, claire)
@@ -35,22 +36,33 @@
     (cons/c symbol? (non-empty-listof (or/c number? numeric-range? atom-arg?))) ;; (married alice claire) ==> married(alice, claire)
     )))
 
+(define atom-or-numeric-expression?
+  (flat-rec-contract
+   atom-or-numeric-expression?
+   (or/c
+    number?
+    (list/c (or/c '+ '- '* '/) atom-or-numeric-expression? atom-or-numeric-expression?)
+    atom?)))
+
 (define/contract (atom->string atom)
   (-> atom? string?)
   (match atom
-    [`(not ,s) #:when (symbol? s) (format "not ~a" (atom->string s))]
-    [`(not (,s ,@args))
-     #:when (symbol? s)
-     (define args-str (map atom-or-number-or-numeric-range->string args))
-     (format "not ~a(~a)" s (string-join args-str ","))]
+    [n #:when (number? n) (format "~a" n)]
+    [s #:when (symbol? s) (symbol->string s)]
+    [`(not ,s) (format "not ~a" (atom->string s))]
     [`(|| ,@args)
      (define args-str (map atom->string args))
      (string-join args-str ";")]
     [`(,s ,@args)
      #:when (symbol? s)
      (define args-str (map atom-or-number-or-numeric-range->string args))
-     (format "~a(~a)" s (string-join args-str ","))]
-    [s #:when (symbol? s) (symbol->string s)]))
+     (format "~a(~a)" s (string-join args-str ","))]))
+
+(define/contract (atom-or-number->string atom)
+  (-> (or/c number? atom?) string?)
+  (cond
+    [(number? atom) (format "~a" atom)]
+    [else (atom->string atom)]))
 
 (define/contract (atom-or-number-or-numeric-range->string atom)
   (-> (or/c number? numeric-range? atom?) string?)
@@ -58,6 +70,30 @@
     [(number? atom) (format "~a" atom)]
     [(numeric-range? atom) (numeric-range->string atom)]
     [else (atom->string atom)]))
+
+(define/contract (atom-or-numeric-expression->string atom)
+  (-> atom-or-numeric-expression? string?)
+  (match atom
+    [atom #:when (number? atom) (format "~a" atom)]
+    [`(+ ,l ,r) (format "(~a) + (~a)" (atom-or-numeric-expression->string l) (atom-or-numeric-expression->string r))]
+    [`(- ,l ,r) (format "(~a) - (~a)" (atom-or-numeric-expression->string l) (atom-or-numeric-expression->string r))]
+    [`(* ,l ,r) (format "(~a) * (~a)" (atom-or-numeric-expression->string l) (atom-or-numeric-expression->string r))]
+    [`(/ ,l ,r) (format "(~a) / (~a)" (atom-or-numeric-expression->string l) (atom-or-numeric-expression->string r))]
+    [else (atom->string atom)]))
+
+(define simple-constraint?
+  (or/c (list/c (or/c '= '!= '< '> '<= '>=) atom-or-numeric-expression? atom-or-numeric-expression?)  atom?))
+
+(define/contract (simple-constraint->string atom)
+  (-> simple-constraint? string?)
+  (match atom
+    [`(= ,l ,r) (format "(~a) = (~a)" (atom-or-numeric-expression->string l) (atom-or-numeric-expression->string r))]
+    [`(!= ,l ,r) (format "(~a) != (~a)" (atom-or-numeric-expression->string l) (atom-or-numeric-expression->string r))]
+    [`(< ,l ,r) (format "(~a) < (~a)" (atom-or-numeric-expression->string l) (atom-or-numeric-expression->string r))]
+    [`(> ,l ,r) (format "(~a) > (~a)" (atom-or-numeric-expression->string l) (atom-or-numeric-expression->string r))]
+    [`(<= ,l ,r) (format "(~a) <= (~a)" (atom-or-numeric-expression->string l) (atom-or-numeric-expression->string r))]
+    [`(>= ,l ,r) (format "(~a) >= (~a)" (atom-or-numeric-expression->string l) (atom-or-numeric-expression->string r))]
+    [_ (atom->string atom)]))
 
 
 (module+ test
@@ -69,6 +105,24 @@
   (check-equal? (atom->string '(f (|| a b) 1)) "f(a;b,1)")
   (check-equal? (atom->string '(f (.. 1 10))) "f(1..10)")
   (check-equal? (atom->string '(f (.. 1 10) (.. 1 10) a)) "f(1..10,1..10,a)"))
+
+(define card-constraint?
+  (or/c
+   atom? ;; (f a) ===> f(a)
+   (cons/c ':
+           (cons/c atom?
+                   (listof
+                    simple-constraint?))) ;; (: (f A) (g A) (h B))  ==> f(A) : g(A), h(B).
+   )
+  )
+
+(define/contract (card-constraint->string constraint)
+  (-> card-constraint? string?)
+  (match constraint
+    [`(: ,head ,@deps)
+     (format "~a:~a" (atom->string head)
+             (string-join (map simple-constraint->string deps) ","))]
+    [_ (atom->string constraint)]))
 
 (define-struct card-between (low high set)
   #:constructor-name make-card-between-internal
@@ -105,20 +159,26 @@
 
 (define constraint?
   (or/c
-   (cons/c 'subset  (listof atom?)) ;; (subset a b) ==> {a;b}
+   (cons/c 'subset  (listof card-constraint?)) ;; (subset a b) ==> {a;b}
+   (list/c (or/c '= '!= '< '> '<= '>=) atom-or-numeric-expression? atom-or-numeric-expression?)
    card-between? ;; (card-between #:low 1 #:high 2 (a b)) ==> 1 {a;b} 2
    card-eq?      ;; (card-eq 1 a b c) ===> {a;b;c} = 1
-   atom?
-   ))
+   atom?))
 
 (define/contract (constraint->string constraint)
   (-> constraint? string?)
   (match constraint
     [`(subset ,@args)
-     (define args-str (map atom->string args))
+     (define args-str (map card-constraint->string args))
      (format "{~a}" (string-join args-str ";"))]
     [v #:when (card-between? v) (card-between->string v)]
     [v #:when (card-eq? v) (card-eq->string v)]
+    [`(= ,l ,r) (format "(~a) = (~a)" (atom-or-numeric-expression->string l) (atom-or-numeric-expression->string r))]
+    [`(!= ,l ,r) (format "(~a) != (~a)" (atom-or-numeric-expression->string l) (atom-or-numeric-expression->string r))]
+    [`(< ,l ,r) (format "(~a) < (~a)" (atom-or-numeric-expression->string l) (atom-or-numeric-expression->string r))]
+    [`(> ,l ,r) (format "(~a) > (~a)" (atom-or-numeric-expression->string l) (atom-or-numeric-expression->string r))]
+    [`(<= ,l ,r) (format "(~a) <= (~a)" (atom-or-numeric-expression->string l) (atom-or-numeric-expression->string r))]
+    [`(>= ,l ,r) (format "(~a) >= (~a)" (atom-or-numeric-expression->string l) (atom-or-numeric-expression->string r))]
     [v (atom->string v)]))
 
 (define rule-head-constraint?
