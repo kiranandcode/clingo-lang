@@ -1,5 +1,5 @@
 #lang racket
-(require "term.rkt")
+(require "term.rkt" racket/struct)
 
 (provide
  atom? atom->string
@@ -214,7 +214,12 @@
 
 (define-struct/contract rule
   ([head rule-head-constraint?]
-   [body rule-body-constraint?]))
+   [body rule-body-constraint?])
+  #:methods gen:custom-write
+  [(define write-proc
+     (make-constructor-style-printer
+      (lambda (_) 'rule)
+      (lambda (obj) (list (rule->string obj)))))])
 
 (define/contract (rule->string rule)
   (-> rule? string?)
