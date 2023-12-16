@@ -129,7 +129,7 @@
   #:name card-between-internal)
 
 (define/contract (card-between  #:low [low #false] #:high [high #false] . contents)
-  (->* () (#:low (or/c integer? #f) #:high (or/c integer? #f)) #:rest (listof atom?) card-between?)
+  (->* () (#:low (or/c integer? #f) #:high (or/c integer? #f)) #:rest (listof card-constraint?) card-between?)
   (make-card-between-internal low high contents))
 
 (define/contract (card-between->string cbetween)
@@ -138,7 +138,7 @@
     [(struct card-between-internal (low high set))
      (format "~a{~a}~a"
              (if low (format "~a " low) "")
-             (string-join (map atom->string set) ";")
+             (string-join (map card-constraint->string set) ";")
              (if high (format " ~a" high) ""))]))
 
 (define-struct card-eq (value contents)
@@ -146,7 +146,7 @@
     #:name card-eq-internal)
 
 (define/contract (card-eq  value . contents)
-  (->* (integer?) #:rest (listof atom?) card-eq?)
+  (->* (integer?) #:rest (listof card-constraint?) card-eq?)
   (make-card-eq-internal value contents))
 
 (define/contract (card-eq->string ceq)
@@ -154,7 +154,7 @@
   (match ceq
     [(struct card-eq-internal (value contents))
      (format "{~a} = ~a"
-             (string-join (map atom->string contents) ";")
+             (string-join (map card-constraint->string contents) ";")
              value)]))
 
 (define constraint?
