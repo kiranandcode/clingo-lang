@@ -2,7 +2,7 @@
 
 (require "unsafe.rkt" "rule.rkt" "term.rkt" "config.rkt")
 (provide with-solver add-clingo-rule! clingo-ground clingo-solve set-clingo-option!
-         add-clingo-constraint!)
+         add-clingo-constraint! add-clingo-show-constraint!)
  
 (define-struct clingo-control (control [grounded #:mutable]))
 
@@ -28,6 +28,15 @@
     (error "Attempt set parameter outside of a control section"))
   (set-clingo-control-config! (clingo-control-control ctrl)
                               (list (cons key vl))))
+
+(define (add-clingo-show-constraint!
+         sym cardinality
+         #:control [ctrl (clingo-current-control)]
+         #:part [part (clingo-current-part)])
+  (log-debug "sending constraint \"#show ~a/~a.\"" sym cardinality)
+  (clingo-control-add
+   (clingo-control-control ctrl) part '[]
+   (format "#show ~a/~a." sym cardinality)))
 
 (define (add-clingo-rule!
          rule
@@ -55,8 +64,6 @@
                       #:control [ctrl (clingo-current-control)])
   (unless ctrl
     (error "Attempt ground outside of a control section"))
-  (unless (not (clingo-control-grounded ctrl))
-    (error "Attempt to ground multiple times..."))
   (define cl-parts
     (map (lambda (part) (make-clingo-part part #f 0)) parts))
   (clingo-control-ground (clingo-control-control ctrl) cl-parts #f #f)
@@ -68,7 +75,7 @@
     (error "Attempt solve outside of a control section"))
   (unless (clingo-control-grounded ctrl)
     (clingo-ground #:parts parts #:control ctrl))
-
+  (set-clingo-control-grounded! ctrl #false)
   (define solve-handle
     (clingo-control-solve (clingo-control-control ctrl)
                           'clingo-solve-mode-yield '[] #f #f))
