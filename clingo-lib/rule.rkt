@@ -212,9 +212,13 @@
   (define args-str (map constraint->string body-constraint))
   (format "~a" (string-join args-str ",")))
 
-(define-struct/contract rule
-  ([head rule-head-constraint?]
-   [body rule-body-constraint?])
+(define/contract (rule-guard head body _)
+  (-> rule-head-constraint? rule-body-constraint? any/c any)
+  (values head body))
+
+(define-struct rule
+  (head body)
+  #:guard rule-guard
   #:methods gen:custom-write
   [(define write-proc
      (make-constructor-style-printer
