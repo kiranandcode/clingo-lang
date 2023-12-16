@@ -203,6 +203,14 @@
      (format "~a" (string-join args-str ";"))]
     [v #:when (card-between? v) (card-between->string v)]
     [v #:when (card-eq? v) (card-eq->string v)]
+    [`(not ,s) #:when (symbol? s)
+               (format "not ~a" s)]
+    [`(not (,s ,@args)) #:when (symbol? s)
+                  (format "not ~a(~a)"
+                          s (string-join (map atom-or-numeric-expression->string args) ","))]
+    [`(,s ,@args) #:when (symbol? s)
+       (format "~a(~a)"
+               s (string-join (map atom-or-numeric-expression->string args) ","))]
     [v (atom->string v)]))
 
 (define rule-body-constraint? (listof constraint?))
