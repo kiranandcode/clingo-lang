@@ -1,6 +1,6 @@
 #lang racket
 
-(require "unsafe.rkt" "rule.rkt" "term.rkt" "config.rkt")
+(require "unsafe.rkt" "rule.rkt" "term.rkt" "config.rkt" "logging.rkt")
 (provide with-solver add-clingo-rule! clingo-ground clingo-solve set-clingo-option!
          add-clingo-constraint! add-clingo-show-constraint!)
  
@@ -33,7 +33,7 @@
          sym cardinality
          #:control [ctrl (clingo-current-control)]
          #:part [part (clingo-current-part)])
-  (log-debug "sending constraint \"#show ~a/~a.\"" sym cardinality)
+  (log-clingo-debug "sending constraint \"#show ~a/~a.\"" sym cardinality)
   (clingo-control-add
    (clingo-control-control ctrl) part '[]
    (format "#show ~a/~a." sym cardinality)))
@@ -44,7 +44,7 @@
          #:part [part (clingo-current-part)])
   (unless ctrl
     (error "Attempt declare rule outside of a control section"))
-  (log-debug "sending rule \"~a\"" (rule->string rule))
+  (log-clingo-debug "sending rule \"~a\"" (rule->string rule))
   (clingo-control-add
    (clingo-control-control ctrl) part '[]
    (rule->string rule)))
@@ -55,10 +55,10 @@
          #:part [part (clingo-current-part)])
   (unless ctrl
     (error "Attempt declare constraint outside of a control section"))
-  (log-debug "sending constraint \"~a\"" (format "~a." (constraint->string constraint)))
+  (log-clingo-debug "sending constraint \"~a\"" (format "~a." (atom->string constraint)))
   (clingo-control-add
    (clingo-control-control ctrl) part '[]
-   (format "~a." (constraint->string constraint))))
+   (format "~a." (atom->string constraint))))
 
 (define (clingo-ground #:parts [parts (list (clingo-current-part))]
                       #:control [ctrl (clingo-current-control)])
