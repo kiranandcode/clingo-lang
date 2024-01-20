@@ -49,7 +49,7 @@
   (match atom
     [n #:when (number? n) (format "~a" n)]
     [s #:when (symbol? s) (symbol->string s)]
-    [`(not ,s) (format "not ~a" (atom->string s))]
+    [`(not ,s) (format "not ~a" (simple-constraint->string s))]
     [`(|| ,@args)
      (define args-str (map atom->string args))
      (string-join args-str ";")]
